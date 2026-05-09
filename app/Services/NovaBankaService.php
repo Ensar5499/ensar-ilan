@@ -7,13 +7,14 @@ use Illuminate\Support\Facades\Log;
 
 class NovaBankaService
 {
-    private string $apiUrl;
-    private string $apiKey;
-    private string $apiSecret;
-    private string $webhookSecret;
+    private ?string $apiUrl;
+    private ?string $apiKey;
+    private ?string $apiSecret;
+    private ?string $webhookSecret;
 
     public function __construct()
     {
+        // Link kontrolü: Boşsa veya localhost ise otomatik olarak Render linkini kullanır
         $envUrl = env('NOVA_BANKA_API_URL');
         
         if (empty($envUrl) || str_contains($envUrl, 'localhost')) {
@@ -30,7 +31,7 @@ class NovaBankaService
     public function createPaymentSession(array $orderData): array
     {
         $body = json_encode($orderData);
-        $signature = hash_hmac('sha256', $body, $this->apiSecret);
+        $signature = hash_hmac('sha256', $body, $this->apiSecret ?? '');
 
         try {
             $response = Http::withHeaders([
@@ -60,6 +61,7 @@ class NovaBankaService
 
     public function verifyWebhook(string $rawBody, string $receivedSignature): bool
     {
+        if (!$this->webhookSecret) return false;
         $expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
         return hash_equals($expected, $receivedSignature);
     }
