@@ -12,11 +12,13 @@
                 <div class="carousel-inner">
                     @foreach($listing->photos as $i => $photo)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
-                            <div class="d-flex align-items-center justify-content-center" style="height: 500px;">
-                                <img src="{{ Storage::url($photo->path) }}"
+                            <div class="d-flex align-items-center justify-content-center" style="height: 500px; background-color: #f8f9fa;">
+                                {{-- asset() kullanımı Render'da daha garantidir --}}
+                                <img src="{{ asset('storage/' . $photo->path) }}"
                                      class="mw-100 mh-100 d-block shadow-sm" 
                                      style="width: auto; height: auto; object-fit: contain;"
-                                     alt="Fotoğraf {{ $i+1 }}">
+                                     alt="Fotoğraf {{ $i+1 }}"
+                                     onerror="this.src='https://placehold.co/600x400?text=Resim+Yuklenemedi'">
                             </div>
                         </div>
                     @endforeach
@@ -32,6 +34,8 @@
                     </button>
                 @endif
             </div>
+        @else
+            <div class="alert alert-secondary text-center mb-4">Bu ilana ait fotoğraf bulunamadı.</div>
         @endif
 
         {{-- İlan Bilgileri --}}
@@ -39,7 +43,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <h2 class="mb-0">{{ $listing->title }}</h2>
-                    <span class="badge badge-{{ $listing->status }} rounded-pill px-3 py-2">
+                    <span class="badge bg-{{ $listing->status === 'active' ? 'success' : 'secondary' }} rounded-pill px-3 py-2 text-white">
                         @if($listing->status === 'active') Aktif
                         @elseif($listing->status === 'passive') Pasif
                         @else Satıldı @endif
@@ -57,18 +61,15 @@
             </div>
         </div>
 
-        {{-- İlan sahibinin kendi ilanıysa düzenleme ve silme butonları --}}
+        {{-- Düzenleme ve Silme --}}
         @auth
             @if(Auth::id() === $listing->user_id)
                 <div class="d-flex gap-2 mb-4">
-                    <a href="{{ route('listings.edit', $listing) }}"
-                       class="btn btn-warning">
-                       <i class="bi bi-pencil"></i> Düzenle
+                    <a href="{{ route('listings.edit', $listing) }}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Düzenle
                     </a>
-                    
-                    {{-- Onaylı Silme Butonu --}}
                     <form method="POST" action="{{ route('listings.destroy', $listing) }}"
-                          onsubmit="return confirm('Bu ilanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')">
+                          onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">
@@ -98,54 +99,31 @@
                 @auth
                     <form method="POST" action="{{ route('comments.store', $listing) }}">
                         @csrf
-                        <textarea name="body" class="form-control mb-2"
-                                  rows="2" placeholder="Yorum yaz..."></textarea>
+                        <textarea name="body" class="form-control mb-2" rows="2" placeholder="Yorum yaz..." required></textarea>
                         <button class="btn btn-primary btn-sm">Yorum Gönder</button>
                     </form>
                 @endauth
             </div>
         </div>
-
-        {{-- Şikayet --}}
-        @auth
-            @if(Auth::id() !== $listing->user_id)
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <button class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse"
-                                data-bs-target="#complaintForm">
-                            <i class="bi bi-flag"></i> Bu İlanı Şikayet Et
-                        </button>
-                        <div class="collapse mt-3" id="complaintForm">
-                            <form method="POST" action="{{ route('complaints.store', $listing) }}">
-                                @csrf
-                                <textarea name="reason" class="form-control mb-2"
-                                          rows="2" placeholder="Şikayet sebebi..."></textarea>
-                                <button class="btn btn-danger btn-sm">Şikayet Gönder</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        @endauth
     </div>
 
-    {{-- Sağ Panel: Satıcı Bilgisi --}}
+    {{-- Sağ Panel --}}
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body text-center">
                 <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3"
                      style="width:64px;height:64px">
-                    <span class="text-white fw-bold fs-4">
-                        {{ strtoupper(substr($listing->user->name, 0, 1)) }}
-                    </span>
+                    <span class="text-white fw-bold fs-4">{{ strtoupper(substr($listing->user->name, 0, 1)) }}</span>
                 </div>
                 <h5 class="mb-0">{{ $listing->user->name }}</h5>
                 <p class="text-muted small">{{ $listing->user->city }}</p>
+                
                 @if($listing->user->phone)
                     <a href="tel:{{ $listing->user->phone }}" class="btn btn-success w-100 mb-2">
                         <i class="bi bi-telephone"></i> {{ $listing->user->phone }}
                     </a>
                 @endif
+
                 @auth
                     @if(Auth::id() !== $listing->user_id)
                         <a href="{{ route('messages.chat', ['receiver_id' => $listing->user_id, 'listing_id' => $listing->id]) }}"
@@ -153,7 +131,6 @@
                             <i class="bi bi-chat"></i> Mesaj Gönder
                         </a>
 
-                        {{-- Ödeme Butonu Eklendi --}}
                         <form method="POST" action="{{ route('checkout.pay') }}" class="mb-2">
                             @csrf
                             <input type="hidden" name="amount" value="{{ $listing->price }}">
@@ -166,10 +143,7 @@
                         <form method="POST" action="{{ route('favorites.toggle', $listing) }}">
                             @csrf
                             <button class="btn btn-outline-danger w-100">
-                                <i class="bi bi-heart"></i>
-                                @auth
-                                    {{ $listing->isFavoritedByUser(Auth::id()) ? 'Favoriden Çıkar' : 'Favorilere Ekle' }}
-                                @endauth
+                                <i class="bi bi-heart"></i> {{ $listing->isFavoritedByUser(Auth::id()) ? 'Favoriden Çıkar' : 'Favorilere Ekle' }}
                             </button>
                         </form>
                     @endif
@@ -177,36 +151,38 @@
             </div>
         </div>
 
-        {{-- HARİTA EKLEMESİ --}}
-        @if($listing->lat && $listing->lng)
+        {{-- HARİTA: Koordinat kontrolü esnetildi --}}
         <div class="card border-0 shadow-sm mb-3 overflow-hidden">
             <div class="card-header bg-white fw-bold border-0 pt-3">
                 <i class="bi bi-geo-alt-fill text-danger"></i> İlan Konumu
             </div>
             <div class="card-body p-0">
-                <div id="detailMap" style="height: 300px; width: 100%; z-index: 1;"></div>
+                <div id="detailMap" style="height: 300px; width: 100%; z-index: 1; background: #eee;"></div>
             </div>
         </div>
 
+        {{-- Leaflet CSS/JS --}}
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                var lat = parseFloat("{{ $listing->lat }}");
-                var lng = parseFloat("{{ $listing->lng }}");
+                // Koordinatlar yoksa varsayılan olarak Eskişehir'i (veya istediğin bir yeri) göster
+                var lat = parseFloat("{{ $listing->lat }}") || 39.7767;
+                var lng = parseFloat("{{ $listing->lng }}") || 30.5206;
                 
-                var map = L.map('detailMap').setView([lat, lng], 14);
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap'
-                }).addTo(map);
-
-                L.marker([lat, lng]).addTo(map);
-
-                setTimeout(function(){ map.invalidateSize(); }, 400);
+                try {
+                    var map = L.map('detailMap').setView([lat, lng], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(map);
+                    L.marker([lat, lng]).addTo(map);
+                    setTimeout(function(){ map.invalidateSize(); }, 500);
+                } catch (e) {
+                    console.error("Harita yüklenemedi:", e);
+                    document.getElementById('detailMap').innerHTML = "<p class='p-3'>Harita yüklenirken bir hata oluştu.</p>";
+                }
             });
         </script>
-        @endif
     </div>
 </div>
 @endsection
