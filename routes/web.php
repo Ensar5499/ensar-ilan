@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan; // Ekledik
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
@@ -11,7 +12,24 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminListingController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminComplaintController;
-use App\Http\Controllers\CheckoutController; // Bunu ekledik
+use App\Http\Controllers\CheckoutController;
+
+// ─── KURTARICI ROTA (Veritabanı Tablolarını Oluşturur) ─────────
+// Site açıldığında ilk buraya git: ensarilan.onrender.com/ensar-kur
+Route::get('/ensar-kur', function() {
+    try {
+        // Önce eski önbelleği temizleyelim
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        
+        // Tabloları PostgreSQL'e basalım
+        Artisan::call('migrate --force');
+        
+        return "<h1>Zafer!</h1> Tablolar başarıyla oluşturuldu. <br><br> <a href='/'>Ana Sayfaya Gitmek İçin Tıkla</a>";
+    } catch (\Exception $e) {
+        return "<h1>Hata!</h1> Veritabanına bağlanılamadı: " . $e->getMessage();
+    }
+});
 
 // ─── Herkese açık sayfalar ─────────────────────────────────────
 Route::get('/', [ListingController::class, 'index'])->name('home');
@@ -49,7 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Şikayetler
     Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
 
-    // Ödeme İşlemleri (Eklendi)
+    // Ödeme İşlemleri
     Route::post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
     Route::get('/orders/success', [CheckoutController::class, 'success'])->name('orders.success');
 });
@@ -58,7 +76,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
 
 // ─── Banka Bildirim (Webhook) ──────────────────────────────────
-// Giriş zorunluluğu olmayan yere ekledik
 Route::post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
 
 // ─── Sadece admin görebilir ─────────────────────────────────────
