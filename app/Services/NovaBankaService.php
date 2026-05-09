@@ -14,7 +14,6 @@ class NovaBankaService
 
     public function __construct()
     {
-        // Render panelindeki linki kontrol eder, eğer hatalıysa veya boşsa arkadaşının linkini zorla kullanır
         $envUrl = env('NOVA_BANKA_API_URL');
         
         if (empty($envUrl) || str_contains($envUrl, 'localhost')) {
