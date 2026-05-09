@@ -14,7 +14,15 @@ class NovaBankaService
 
     public function __construct()
     {
-        $this->apiUrl        = env('NOVA_BANKA_API_URL');
+        // Eğer env içindeki link localhost ise veya boşsa otomatik olarak arkadaşının linkine bağlanır
+        $envUrl = env('NOVA_BANKA_API_URL');
+        
+        if (empty($envUrl) || str_contains($envUrl, 'localhost')) {
+            $this->apiUrl = 'https://novabanka.onrender.com/api/v1/pos';
+        } else {
+            $this->apiUrl = $envUrl;
+        }
+
         $this->apiKey        = env('NOVA_BANKA_API_KEY');
         $this->apiSecret     = env('NOVA_BANKA_API_SECRET');
         $this->webhookSecret = env('NOVA_BANKA_WEBHOOK_SECRET');
@@ -38,6 +46,7 @@ class NovaBankaService
         }
 
         Log::error('NovaBanka ödeme oturumu hatası', [
+            'url'    => $this->apiUrl, // Hangi URL'ye gitmeye çalıştığını logda görelim
             'status' => $response->status(),
             'body'   => $response->body(),
         ]);
