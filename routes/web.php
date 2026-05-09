@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // İlan yönetimi
     Route::get('/listings/create', [ListingController::class, 'create'])->name('listings.create');
-    Route::post('/listings', [ListingController::class, 'store'])->name('listings.store');
+    @post('/listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('/listings/{listing}/edit', [ListingController::class, 'edit'])->name('listings.edit');
     Route::put('/listings/{listing}', [ListingController::class, 'update'])->name('listings.update');
     Route::delete('/listings/{listing}', [ListingController::class, 'destroy'])->name('listings.destroy');
@@ -55,20 +55,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Mesajlaşma
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{receiver_id}/{listing_id}', [MessageController::class, 'chat'])->name('messages.chat');
-    Route::post('/messages/send', [MessageController::class, 'store'])->name('messages.store');
+    @post('/messages/send', [MessageController::class, 'store'])->name('messages.store');
 
     // Favoriler
-    Route::post('/favorites/{listing}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+    @post('/favorites/{listing}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
 
     // Yorumlar
-    Route::post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
+    @post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
 
     // Şikayetler
-    Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
+    @post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
 
     // Ödeme İşlemleri
-    Route::post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
+    @post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
     Route::get('/orders/success', [CheckoutController::class, 'success'])->name('orders.success');
 });
 
@@ -76,7 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
 
 // ─── Banka Bildirim (Webhook) ──────────────────────────────────
-Route::post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
+@post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
 
 // ─── Sadece admin görebilir ─────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -89,7 +89,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/complaints', [AdminComplaintController::class, 'index'])->name('complaints.index');
     Route::put('/complaints/{complaint}/resolve', [AdminComplaintController::class, 'resolve'])->name('complaints.resolve');
     
-    Route::post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
+    @post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
+});
+
+// ─── FOTOĞRAF DÜZELTME ROTASI (Yeni Eklendi) ───────────────────
+// Render üzerinde fotoğrafların görünmesi için bir kez buraya gir:
+// ensarilan.onrender.com/link-olustur
+Route::get('/link-olustur', function () {
+    try {
+        Artisan::call('storage:link');
+        return "<h1>Harika!</h1> Fotoğraf bağlantısı oluşturuldu. Artık resimler görünmeli. <br><br> <a href='/'>Ana Sayfaya Dön</a>";
+    } catch (\Exception $e) {
+        return "Hata oluştu: " . $e->getMessage();
+    }
 });
 
 require __DIR__.'/auth.php';
