@@ -69,7 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // ─── Detay Sayfası ───────────────────────────────────────────
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
 
-// ─── Webhook ──────────────────────────────────
+// ─── Webhook ──────────────────────────────────────────────────
 Route::post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
 
 // ─── Sadece admin ─────────────────────────────────────
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
 });
 
-// ─── FOTOĞRAF DÜZELTME ROTASI ───────────────────
+// ─── FOTOĞRAF DÜZELTME ROTASI ──────────────────────────────────
 Route::get('/link-olustur', function () {
     try {
         Artisan::call('storage:link');
@@ -95,4 +95,4 @@ Route::get('/link-olustur', function () {
     }
 });
 
-require __DIR__.'/auth.php';s
+require __DIR__.'/auth.php';
