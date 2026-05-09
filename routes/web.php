@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
@@ -14,15 +15,35 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminComplaintController;
 use App\Http\Controllers\CheckoutController;
 
-// ─── KURTARICI ROTA ──────────────────────────────────────────
+// ─── KURTARICI ROTA (GÜNCELLENDİ) ─────────────────────────────
 Route::get('/ensar-kur', function() {
     try {
+        // Önbelleği temizle
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
-        Artisan::call('migrate --force');
-        return "<h1>Zafer!</h1> Tablolar başarıyla oluşturuldu. <br><br> <a href='/'>Ana Sayfaya Gitmek İçin Tıkla</a>";
+        
+        // Tabloları oluştur (Zaten varsa hata vermez, eksikleri tamamlar)
+        Artisan::call('migrate', ['--force' => true]);
+
+        // KATEGORİLERİ EKLE (İlan verme hatasını çözen kısım)
+        $categories = [
+            ['name' => 'Araba', 'slug' => 'araba'],
+            ['name' => 'Motosiklet', 'slug' => 'motosiklet'],
+            ['name' => 'Emlak', 'slug' => 'emlak'],
+            ['name' => 'Elektronik', 'slug' => 'elektronik'],
+            ['name' => 'Diğer', 'slug' => 'diger'],
+        ];
+
+        foreach ($categories as $cat) {
+            DB::table('categories')->updateOrInsert(
+                ['slug' => $cat['slug']],
+                ['name' => $cat['name'], 'created_at' => now(), 'updated_at' => now()]
+            );
+        }
+
+        return "<h1>Zafer!</h1> Sistem ve Kategoriler Güncellendi. <br><br> <a href='/listings/create'>İlan Vermeye Git</a>";
     } catch (\Exception $e) {
-        return "<h1>Hata!</h1> Veritabanına bağlanılamadı: " . $e->getMessage();
+        return "<h1>Hata!</h1> Bir sorun oluştu: " . $e->getMessage();
     }
 });
 
@@ -86,7 +107,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // ─── RENDER ÖZEL: FOTOĞRAF GÖSTERME SİSTEMİ ───────────────────
-// Render symlink izni vermediği için resimleri bu rota üzerinden okutuyoruz.
 Route::get('/storage/listings/{filename}', function ($filename) {
     $path = storage_path('app/public/listings/' . $filename);
 
