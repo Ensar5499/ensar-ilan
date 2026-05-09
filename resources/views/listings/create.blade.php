@@ -35,6 +35,17 @@
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('listings.store') }}" enctype="multipart/form-data">
                         @csrf
+                        @if ($errors->any())
+    <div class="alert alert-danger mb-4 shadow-sm">
+        <h6 class="fw-bold">Eksik veya Hatalı Bilgi Var:</h6>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+                        
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">İlan Başlığı</label>
