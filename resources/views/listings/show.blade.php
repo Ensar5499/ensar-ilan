@@ -13,7 +13,7 @@
                     @foreach($listing->photos as $i => $photo)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
                             <div class="d-flex align-items-center justify-content-center" style="height: 500px; background-color: #f8f9fa;">
-                                {{-- asset() kullanımı Render'da daha garantidir --}}
+                                {{-- asset() kullanımı Render sunucusunda dosya yolu için daha garantidir --}}
                                 <img src="{{ asset('storage/' . $photo->path) }}"
                                      class="mw-100 mh-100 d-block shadow-sm" 
                                      style="width: auto; height: auto; object-fit: contain;"
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        {{-- HARİTA: Koordinat kontrolü esnetildi --}}
+        {{-- HARİTA --}}
         <div class="card border-0 shadow-sm mb-3 overflow-hidden">
             <div class="card-header bg-white fw-bold border-0 pt-3">
                 <i class="bi bi-geo-alt-fill text-danger"></i> İlan Konumu
@@ -166,7 +166,7 @@
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Koordinatlar yoksa varsayılan olarak Eskişehir'i (veya istediğin bir yeri) göster
+                // Koordinat yoksa Eskişehir merkez alarak haritayı başlatır
                 var lat = parseFloat("{{ $listing->lat }}") || 39.7767;
                 var lng = parseFloat("{{ $listing->lng }}") || 30.5206;
                 
@@ -176,10 +176,11 @@
                         attribution: '&copy; OpenStreetMap'
                     }).addTo(map);
                     L.marker([lat, lng]).addTo(map);
-                    setTimeout(function(){ map.invalidateSize(); }, 500);
+                    // Render üzerindeki yükleme gecikmeleri için haritayı tazele
+                    setTimeout(function(){ map.invalidateSize(); }, 600);
                 } catch (e) {
-                    console.error("Harita yüklenemedi:", e);
-                    document.getElementById('detailMap').innerHTML = "<p class='p-3'>Harita yüklenirken bir hata oluştu.</p>";
+                    console.error("Harita hatası:", e);
+                    document.getElementById('detailMap').innerHTML = "<p class='p-3 text-muted'>Harita şu an yüklenemedi.</p>";
                 }
             });
         </script>
