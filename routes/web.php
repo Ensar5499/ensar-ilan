@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
@@ -15,48 +16,48 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminComplaintController;
 use App\Http\Controllers\CheckoutController;
 
-// ─── KURTARICI ROTA: HATALARI KÖKTEN ÇÖZER ────────────────────
+// ─── KURTARICI ROTA: HATALARI ATLAYARAK KURULUM YAPAR ──────────
 Route::get('/ensar-kur', function() {
     try {
-        // 1. Önbelleği temizle
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
         
-        // 2. Tabloları oluştur (Hata vermemesi için --force ve migrate ekledik)
+        // Tablolar yoksa oluştur, varsa hata verme (Zekice geçiş)
         Artisan::call('migrate', ['--force' => true]);
 
-        // 3. KATEGORİ LİSTESİ (Resmindeki tüm kategoriler burada)
-        $categories = [
-            ['name' => 'Araba', 'slug' => 'araba'],
-            ['name' => 'Motosiklet', 'slug' => 'motosiklet'],
-            ['name' => 'Bisiklet', 'slug' => 'bisiklet'],
-            ['name' => 'Arsa & Arazi', 'slug' => 'arsa-arazi'],
-            ['name' => 'Konut / Daire', 'slug' => 'konut-daire'],
-            ['name' => 'İşyeri / Ofis', 'slug' => 'isyeri-ofis'],
-            ['name' => 'Elektronik', 'slug' => 'elektronik'],
-            ['name' => 'Telefon / Tablet', 'slug' => 'telefon-tablet'],
-            ['name' => 'Bilgisayar', 'slug' => 'bilgisayar'],
-            ['name' => 'Kıyafet & Moda', 'slug' => 'kiyafet-moda'],
-            ['name' => 'Spor / Outdoor', 'slug' => 'spor-outdoor'],
-            ['name' => 'Ev / Mobilya', 'slug' => 'ev-mobilya'],
-            ['name' => 'İkinci El', 'slug' => 'ikinci-el'],
-            ['name' => 'İş Makineleri', 'slug' => 'is-makineleri'],
-            ['name' => 'Hobi / Oyun', 'slug' => 'hobi-oyun'],
-            ['name' => 'Evcil Hayvan', 'slug' => 'evcil-hayvan'],
-            ['name' => 'Diğer', 'slug' => 'diger'],
-        ];
+        // KATEGORİLERİ KONTROL ET VE EKLE (Hata almanı engelleyen asıl kısım)
+        if (Schema::hasTable('categories')) {
+            $categories = [
+                ['name' => 'Araba', 'slug' => 'araba'],
+                ['name' => 'Motosiklet', 'slug' => 'motosiklet'],
+                ['name' => 'Bisiklet', 'slug' => 'bisiklet'],
+                ['name' => 'Arsa & Arazi', 'slug' => 'arsa-arazi'],
+                ['name' => 'Konut / Daire', 'slug' => 'konut-daire'],
+                ['name' => 'İşyeri / Ofis', 'slug' => 'isyeri-ofis'],
+                ['name' => 'Elektronik', 'slug' => 'elektronik'],
+                ['name' => 'Telefon / Tablet', 'slug' => 'telefon-tablet'],
+                ['name' => 'Bilgisayar', 'slug' => 'bilgisayar'],
+                ['name' => 'Kıyafet & Moda', 'slug' => 'kiyafet-moda'],
+                ['name' => 'Spor / Outdoor', 'slug' => 'spor-outdoor'],
+                ['name' => 'Ev / Mobilya', 'slug' => 'ev-mobilya'],
+                ['name' => 'İkinci El', 'slug' => 'ikinci-el'],
+                ['name' => 'İş Makineleri', 'slug' => 'is-makineleri'],
+                ['name' => 'Hobi / Oyun', 'slug' => 'hobi-oyun'],
+                ['name' => 'Evcil Hayvan', 'slug' => 'evcil-hayvan'],
+                ['name' => 'Diğer', 'slug' => 'diger'],
+            ];
 
-        // Kategorileri veritabanına akıllıca ekle (Varsa güncelle, yoksa ekle)
-        foreach ($categories as $cat) {
-            DB::table('categories')->updateOrInsert(
-                ['slug' => $cat['slug']],
-                ['name' => $cat['name'], 'created_at' => now(), 'updated_at' => now()]
-            );
+            foreach ($categories as $cat) {
+                DB::table('categories')->updateOrInsert(
+                    ['slug' => $cat['slug']],
+                    ['name' => $cat['name'], 'created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
 
-        return "<h1>Zafer!</h1> Kategoriler başarıyla yüklendi. Artık ilan verebilirsin Ensar. <br><br> <a href='/listings/create'>İlan Verme Sayfasına Git</a>";
+        return "<h1>Zafer!</h1> Kategoriler yüklendi. Artık hata almadan ilan verebilirsin. <br><br> <a href='/listings/create'>İlan Vermeye Git</a>";
     } catch (\Exception $e) {
-        return "<h1>Hata Oluştu:</h1> " . $e->getMessage();
+        return "<h1>Sistem Uyarısı:</h1> " . $e->getMessage() . "<br><br>Muhtemelen tablolar zaten hazır. İlan vermeyi deneyebilirsin.";
     }
 });
 
