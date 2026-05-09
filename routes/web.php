@@ -72,7 +72,7 @@ Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('lis
 // ─── Webhook ──────────────────────────────────────────────────
 Route::post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
 
-// ─── Sadece admin ─────────────────────────────────────
+// ─── Sadece admin ─────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/listings', [AdminListingController::class, 'index'])->name('listings.index');
@@ -85,14 +85,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
 });
 
-// ─── FOTOĞRAF DÜZELTME ROTASI ──────────────────────────────────
-Route::get('/link-olustur', function () {
-    try {
-        Artisan::call('storage:link');
-        return "<h1>Harika!</h1> Fotoğraf bağlantısı oluşturuldu. Artık resimler görünmeli. <br><br> <a href='/'>Ana Sayfaya Dön</a>";
-    } catch (\Exception $e) {
-        return "Hata oluştu: " . $e->getMessage();
+// ─── RENDER ÖZEL: FOTOĞRAF GÖSTERME SİSTEMİ ───────────────────
+// Render symlink izni vermediği için resimleri bu rota üzerinden okutuyoruz.
+Route::get('/storage/listings/{filename}', function ($filename) {
+    $path = storage_path('app/public/listings/' . $filename);
+
+    if (!file_exists($path)) {
+        abort(404);
     }
+
+    $file = file_get_contents($path);
+    $type = mime_content_type($path);
+
+    return response($file)->header('Content-Type', $type);
 });
 
 require __DIR__.'/auth.php';
