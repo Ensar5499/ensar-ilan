@@ -1,28 +1,41 @@
-FROM richarvey/php-apache:3.1.0
+# Resmi ve güvenilir PHP imajı
+FROM php:8.2-apache
 
-# Gerekli sistem paketlerini yükle
-RUN apk add --no-cache \
+# Sistem paketlerini ve PHP eklentilerini yükle
+RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-turbo-dev \
-    freetype-dev \
-    zip \
+    libfreetype6-dev \
     libzip-dev \
-    unzip
+    zip \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip pdo pdo_mysql
+
+# Apache mod_rewrite aktif et (Laravel rotaları için şart)
+RUN a2enmod rewrite
+
+# Composer'ı resmi imajdan kopyala
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Proje dosyalarını kopyala
 COPY . /var/www/html
 
-# Composer bağımlılıklarını yükle (Vendor klasörü yoksa oluşturur)
+# Çalışma dizini
+WORKDIR /var/www/html
+
+# Composer bağımlılıklarını yükle
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Dosya izinlerini ayarla (Laravel'in yazabilmesi için şart)
+# Dosya izinlerini ayarla
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Apache'nin public klasörüne bakmasını sağla
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+
 # Laravel ayarları
-ENV WEBROOT /var/www/html/public
 ENV APP_ENV production
 ENV APP_DEBUG false
 
-# Apache ayarlarını ve portu belirle
 EXPOSE 80
