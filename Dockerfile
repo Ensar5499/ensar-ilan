@@ -35,14 +35,10 @@ RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/a
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 9. Başlangıç (Geliştirilmiş Güvenli Başlatma)
+# 9. Başlangıç (En Güvenli Mod)
 ENV PORT 80
 EXPOSE 80
 
-# Önce tüm cache'leri siler, sonra migrate dener. 
-# "|| true" sayesinde migrate başarısız olsa bile (tablo zaten varsa vb.) site açılmaya devam eder.
-CMD php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan view:clear && \
-    (php artisan migrate --force || true) && \
-    apache2-foreground
+# Karmaşık komutlar yerine sadece Apache'yi başlatıyoruz.
+# Migration ve Cache işlemlerini site ayağa kalkınca panelden veya rotadan yapacağız.
+CMD ["apache2-foreground"]
