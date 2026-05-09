@@ -15,25 +15,38 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminComplaintController;
 use App\Http\Controllers\CheckoutController;
 
-// ─── KURTARICI ROTA (GÜNCELLENDİ) ─────────────────────────────
+// ─── KURTARICI ROTA: HATALARI KÖKTEN ÇÖZER ────────────────────
 Route::get('/ensar-kur', function() {
     try {
-        // Önbelleği temizle
+        // 1. Önbelleği temizle
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
         
-        // Tabloları oluştur (Zaten varsa hata vermez, eksikleri tamamlar)
+        // 2. Tabloları oluştur (Hata vermemesi için --force ve migrate ekledik)
         Artisan::call('migrate', ['--force' => true]);
 
-        // KATEGORİLERİ EKLE (İlan verme hatasını çözen kısım)
+        // 3. KATEGORİ LİSTESİ (Resmindeki tüm kategoriler burada)
         $categories = [
             ['name' => 'Araba', 'slug' => 'araba'],
             ['name' => 'Motosiklet', 'slug' => 'motosiklet'],
-            ['name' => 'Emlak', 'slug' => 'emlak'],
+            ['name' => 'Bisiklet', 'slug' => 'bisiklet'],
+            ['name' => 'Arsa & Arazi', 'slug' => 'arsa-arazi'],
+            ['name' => 'Konut / Daire', 'slug' => 'konut-daire'],
+            ['name' => 'İşyeri / Ofis', 'slug' => 'isyeri-ofis'],
             ['name' => 'Elektronik', 'slug' => 'elektronik'],
+            ['name' => 'Telefon / Tablet', 'slug' => 'telefon-tablet'],
+            ['name' => 'Bilgisayar', 'slug' => 'bilgisayar'],
+            ['name' => 'Kıyafet & Moda', 'slug' => 'kiyafet-moda'],
+            ['name' => 'Spor / Outdoor', 'slug' => 'spor-outdoor'],
+            ['name' => 'Ev / Mobilya', 'slug' => 'ev-mobilya'],
+            ['name' => 'İkinci El', 'slug' => 'ikinci-el'],
+            ['name' => 'İş Makineleri', 'slug' => 'is-makineleri'],
+            ['name' => 'Hobi / Oyun', 'slug' => 'hobi-oyun'],
+            ['name' => 'Evcil Hayvan', 'slug' => 'evcil-hayvan'],
             ['name' => 'Diğer', 'slug' => 'diger'],
         ];
 
+        // Kategorileri veritabanına akıllıca ekle (Varsa güncelle, yoksa ekle)
         foreach ($categories as $cat) {
             DB::table('categories')->updateOrInsert(
                 ['slug' => $cat['slug']],
@@ -41,9 +54,9 @@ Route::get('/ensar-kur', function() {
             );
         }
 
-        return "<h1>Zafer!</h1> Sistem ve Kategoriler Güncellendi. <br><br> <a href='/listings/create'>İlan Vermeye Git</a>";
+        return "<h1>Zafer!</h1> Kategoriler başarıyla yüklendi. Artık ilan verebilirsin Ensar. <br><br> <a href='/listings/create'>İlan Verme Sayfasına Git</a>";
     } catch (\Exception $e) {
-        return "<h1>Hata!</h1> Bir sorun oluştu: " . $e->getMessage();
+        return "<h1>Hata Oluştu:</h1> " . $e->getMessage();
     }
 });
 
@@ -54,43 +67,31 @@ Route::get('/dashboard', function () { return redirect()->route('home'); })->nam
 
 // ─── Giriş yapan kullanıcılara özel ────────────────────────────
 Route::middleware(['auth', 'verified'])->group(function () {
-
-    // İlan yönetimi
     Route::get('/listings/create', [ListingController::class, 'create'])->name('listings.create');
     Route::post('/listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('/listings/{listing}/edit', [ListingController::class, 'edit'])->name('listings.edit');
     Route::put('/listings/{listing}', [ListingController::class, 'update'])->name('listings.update');
     Route::delete('/listings/{listing}', [ListingController::class, 'destroy'])->name('listings.destroy');
 
-    // Profil
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
-    // Mesajlaşma
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{receiver_id}/{listing_id}', [MessageController::class, 'chat'])->name('messages.chat');
     Route::post('/messages/send', [MessageController::class, 'store'])->name('messages.store');
 
-    // Favoriler
     Route::post('/favorites/{listing}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
 
-    // Yorumlar
     Route::post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
-
-    // Şikayetler
     Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
 
-    // Ödeme İşlemleri
     Route::post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
     Route::get('/orders/success', [CheckoutController::class, 'success'])->name('orders.success');
 });
 
-// ─── Detay Sayfası ───────────────────────────────────────────
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
-
-// ─── Webhook ──────────────────────────────────────────────────
 Route::post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
 
 // ─── Sadece admin ─────────────────────────────────────────────
@@ -106,17 +107,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
 });
 
-// ─── RENDER ÖZEL: FOTOĞRAF GÖSTERME SİSTEMİ ───────────────────
+// ─── RENDER ÖZEL: FOTOĞRAF GÖSTERME (404 HATASINI ÇÖZER) ───────
 Route::get('/storage/listings/{filename}', function ($filename) {
     $path = storage_path('app/public/listings/' . $filename);
-
-    if (!file_exists($path)) {
-        abort(404);
-    }
-
+    if (!file_exists($path)) { abort(404); }
     $file = file_get_contents($path);
     $type = mime_content_type($path);
-
     return response($file)->header('Content-Type', $type);
 });
 
