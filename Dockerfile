@@ -36,7 +36,7 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # 9. Başlangıç komutu
-# Hata vermemesi için migrate komutunu buradan sildik
+# Hata almamak için her şeyi temizleyip sadece sunucuyu başlatıyoruz
 ENV PORT 80
 EXPOSE 80
 
