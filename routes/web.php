@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan; // Ekledik
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
@@ -14,17 +14,12 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminComplaintController;
 use App\Http\Controllers\CheckoutController;
 
-// ─── KURTARICI ROTA (Veritabanı Tablolarını Oluşturur) ─────────
-// Site açıldığında ilk buraya git: ensarilan.onrender.com/ensar-kur
+// ─── KURTARICI ROTA ──────────────────────────────────────────
 Route::get('/ensar-kur', function() {
     try {
-        // Önce eski önbelleği temizleyelim
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
-        
-        // Tabloları PostgreSQL'e basalım
         Artisan::call('migrate --force');
-        
         return "<h1>Zafer!</h1> Tablolar başarıyla oluşturuldu. <br><br> <a href='/'>Ana Sayfaya Gitmek İçin Tıkla</a>";
     } catch (\Exception $e) {
         return "<h1>Hata!</h1> Veritabanına bağlanılamadı: " . $e->getMessage();
@@ -34,7 +29,6 @@ Route::get('/ensar-kur', function() {
 // ─── Herkese açık sayfalar ─────────────────────────────────────
 Route::get('/', [ListingController::class, 'index'])->name('home');
 Route::get('/listings', [ListingController::class, 'index'])->name('listings.index'); 
-
 Route::get('/dashboard', function () { return redirect()->route('home'); })->name('dashboard'); 
 
 // ─── Giriş yapan kullanıcılara özel ────────────────────────────
@@ -42,7 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // İlan yönetimi
     Route::get('/listings/create', [ListingController::class, 'create'])->name('listings.create');
-    @post('/listings', [ListingController::class, 'store'])->name('listings.store');
+    Route::post('/listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('/listings/{listing}/edit', [ListingController::class, 'edit'])->name('listings.edit');
     Route::put('/listings/{listing}', [ListingController::class, 'update'])->name('listings.update');
     Route::delete('/listings/{listing}', [ListingController::class, 'destroy'])->name('listings.destroy');
@@ -55,30 +49,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Mesajlaşma
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{receiver_id}/{listing_id}', [MessageController::class, 'chat'])->name('messages.chat');
-    @post('/messages/send', [MessageController::class, 'store'])->name('messages.store');
+    Route::post('/messages/send', [MessageController::class, 'store'])->name('messages.store');
 
     // Favoriler
-    @post('/favorites/{listing}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+    Route::post('/favorites/{listing}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
 
     // Yorumlar
-    @post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
+    Route::post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
 
     // Şikayetler
-    @post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
+    Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
 
     // Ödeme İşlemleri
-    @post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
+    Route::post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
     Route::get('/orders/success', [CheckoutController::class, 'success'])->name('orders.success');
 });
 
-// ─── Detay Sayfası (En Sonda Olmalı) ───────────────────────────
+// ─── Detay Sayfası ───────────────────────────────────────────
 Route::get('/listings/{listing}', [ListingController::class, 'show'])->name('listings.show');
 
-// ─── Banka Bildirim (Webhook) ──────────────────────────────────
-@post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
+// ─── Webhook ──────────────────────────────────
+Route::post('/webhook/nova', [App\Http\Controllers\WebhookController::class, 'handleNova'])->name('webhook.nova');
 
-// ─── Sadece admin görebilir ─────────────────────────────────────
+// ─── Sadece admin ─────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/listings', [AdminListingController::class, 'index'])->name('listings.index');
@@ -88,13 +82,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::get('/complaints', [AdminComplaintController::class, 'index'])->name('complaints.index');
     Route::put('/complaints/{complaint}/resolve', [AdminComplaintController::class, 'resolve'])->name('complaints.resolve');
-    
-    @post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
+    Route::post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
 });
 
-// ─── FOTOĞRAF DÜZELTME ROTASI (Yeni Eklendi) ───────────────────
-// Render üzerinde fotoğrafların görünmesi için bir kez buraya gir:
-// ensarilan.onrender.com/link-olustur
+// ─── FOTOĞRAF DÜZELTME ROTASI ───────────────────
 Route::get('/link-olustur', function () {
     try {
         Artisan::call('storage:link');
@@ -104,4 +95,4 @@ Route::get('/link-olustur', function () {
     }
 });
 
-require __DIR__.'/auth.php';
+require __DIR__.'/auth.php';s
