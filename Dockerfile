@@ -1,4 +1,4 @@
-FROM richarvey/php-apache-heroku:latest
+FROM richarvey/php-apache:latest
 
 # Proje dosyalarını kopyala
 COPY . /var/www/html
