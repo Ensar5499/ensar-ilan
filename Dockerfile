@@ -1,7 +1,6 @@
 FROM php:8.2-apache
 
 # 1. Sistem paketlerini ve PostgreSQL sürücülerini kur
-# Render'daki veritabanın PostgreSQL olduğu için pdo_pgsql ekledik
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libzip-dev \
@@ -9,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    && docker-php-ext-install pdo pdo_pgsql pdo_mysql gd zip
+    && docker-php-ext-install pdo pdo_pgsql gd zip
 
 # 2. Composer'ı resmi imajdan çek
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -36,9 +35,9 @@ RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/a
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 9. Başlangıç komutu (Migration buraya eklendi)
-# Site her açıldığında önce veritabanı tablolarını kontrol eder ve oluşturur
+# 9. Başlangıç komutu
+# Hata vermemesi için migrate komutunu buradan sildik
 ENV PORT 80
 EXPOSE 80
 
-CMD php artisan migrate --force && php artisan config:cache && apache2-foreground
+CMD php artisan config:clear && php artisan cache:clear && apache2-foreground
