@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        /**
+         * Render üzerinde (production ortamında) linklerin ve formların 
+         * "Güvenli Değil" hatası vermemesi için HTTPS zorunlu kılınır.
+         */
+        if (config('app.env') === 'production' || env('RENDER')) {
+            URL::forceScheme('https');
+        }
     }
 }
