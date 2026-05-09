@@ -35,8 +35,10 @@ RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/a
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 9. Başlangıç (Sadece sunucuyu başlat, migrate vs. yapma)
+# 9. Başlangıç (Otomatik Migration ve Sunucu Başlatma)
 ENV PORT 80
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+# KALICI ÇÖZÜM: Önce cache temizler, migrate dener ve sunucuyu açar.
+# Buradaki ";" işareti, migrate hata verse bile sunucunun açılmasını sağlar.
+CMD php artisan config:clear && php artisan migrate --force ; apache2-foreground
