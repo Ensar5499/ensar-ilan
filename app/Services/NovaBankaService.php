@@ -14,13 +14,14 @@ class NovaBankaService
 
     public function __construct()
     {
-        // Link kontrolü: Boşsa veya localhost ise otomatik olarak Render linkini kullanır
         $envUrl = env('NOVA_BANKA_API_URL');
         
+        // URL'yi temizle ve ayarla
         if (empty($envUrl) || str_contains($envUrl, 'localhost')) {
             $this->apiUrl = 'https://novabanka.onrender.com/api/v1/pos';
         } else {
-            $this->apiUrl = $envUrl;
+            // Sondaki slash'ı (/) temizler ki hata olmasın
+            $this->apiUrl = rtrim($envUrl, '/');
         }
 
         $this->apiKey        = env('NOVA_BANKA_API_KEY');
@@ -30,33 +31,46 @@ class NovaBankaService
 
     public function createPaymentSession(array $orderData): array
     {
+        // JSON'u ham haliyle hazırlıyoruz
         $body = json_encode($orderData);
         $signature = hash_hmac('sha256', $body, $this->apiSecret ?? '');
 
         try {
+            // URL'yi birleştir (Çift slash hatasını önler)
+            $targetUrl = $this->apiUrl . '/create-session';
+
             $response = Http::withHeaders([
                 'X-POS-API-KEY'   => $this->apiKey,
                 'X-POS-SIGNATURE' => $signature,
                 'Content-Type'    => 'application/json',
                 'Accept'          => 'application/json',
             ])->withBody($body, 'application/json')
-              ->post($this->apiUrl . '/create-session');
+              ->post($targetUrl);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
-            Log::error('NovaBanka ödeme oturumu hatası', [
-                'url'    => $this->apiUrl,
+            // HATA VARSA: Samet'in sitesi ne cevap verdi?
+            $errorDetail = $response->json('message') ?? $response->body();
+            
+            Log::error('NovaBanka API Hatası', [
                 'status' => $response->status(),
-                'body'   => $response->body(),
+                'detail' => $errorDetail
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('NovaBanka bağlantı hatası: ' . $e->getMessage());
-        }
+            return [
+                'success' => false, 
+                'error' => "Banka Hatası ({$response->status()}): " . $errorDetail
+            ];
 
-        return ['success' => false, 'error' => 'Ödeme başlatılamadı.'];
+        } catch (\Exception $e) {
+            Log::error('NovaBanka Bağlantı Hatası: ' . $e->getMessage());
+            return [
+                'success' => false, 
+                'error' => 'Bağlantı kurulamadı: ' . $e->getMessage()
+            ];
+        }
     }
 
     public function verifyWebhook(string $rawBody, string $receivedSignature): bool
