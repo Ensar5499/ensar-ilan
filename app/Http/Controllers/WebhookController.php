@@ -13,7 +13,7 @@ class WebhookController extends Controller
     public function handleNova(Request $request)
     {
         // 1. Bankadan gelen imzayı ve gövdeyi al
-        $signature = $request->header('X-POS-SIGNATURE');
+        $signature = $request->header('X-Nova-Signature');
         $rawBody   = $request->getContent();
 
         // 2. Güvenlik kontrolü: Bu mesaj gerçekten arkadaşından mı geldi?
