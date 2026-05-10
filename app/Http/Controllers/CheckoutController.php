@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\NovaBankaService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Hataları önlemek için eklendi
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; // Hataları kaydetmek için eklendi
 
 class CheckoutController extends Controller
 {
@@ -45,8 +46,24 @@ class CheckoutController extends Controller
             return redirect($result['checkout_url']);
         }
 
-        // Hata varsa geri gönder ve mesaj bas
-        return back()->with('error', 'Ödeme başlatılamadı: ' . ($result['error'] ?? 'Bilinmeyen hata'));
+        // --- HATA AYIKLAMA (DEBUG) BÖLÜMÜ ---
+        // Eğer ödeme başlamıyorsa, Render loglarına (Logs) teknik detayı yazdırıyoruz.
+        Log::error('Nova Banka API Bağlantı Hatası:', [
+            'gönderilen_veri' => $orderData,
+            'bankadan_gelen' => $result
+        ]);
+
+        // Ekrana basılacak hata mesajını detaylandırıyoruz
+        $technicalError = $result['error'] ?? 'Bilinmeyen hata';
+        
+        // Eğer bankadan (Samet'in sitesinden) bir doğrulama hatası geldiyse onu da ekleyelim
+        if (isset($result['details'])) {
+            $technicalError .= ' (Detay: ' . json_encode($result['details']) . ')';
+        }
+        // ------------------------------------
+
+        // Hata varsa geri gönder ve detaylı mesajı bas
+        return back()->with('error', 'Ödeme başlatılamadı: ' . $technicalError);
     }
 
     /**
