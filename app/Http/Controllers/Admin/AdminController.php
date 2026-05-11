@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Listing;
 use App\Models\User;
-use App\Models\Complaint; // Report yerine Complaint eklendi
+use App\Models\Complaint; // Complaint modeli eklendi
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -38,7 +38,8 @@ class AdminController extends Controller
         // Şikayetleri, şikayet edilen ilan ve şikayet eden kullanıcı bilgileriyle beraber çekiyoruz
         $complaints = Complaint::with(['user', 'listing'])->latest()->get();
         
-        return view('admin.complaints', compact('complaints'));
+        // Klasör yapına uygun olarak view yolu 'admin.complaints.index' yapıldı
+        return view('admin.complaints.index', compact('complaints'));
     }
 
     /**
