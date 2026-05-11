@@ -71,11 +71,14 @@ class ListingController extends Controller
      */
     public function show(Listing $listing)
     {
-        // IP ve İlan ID kombinasyonuyla benzersiz bir anahtar oluştur (Örn: viewed_listing_5_ip_127.0.0.1)
+        // IP ve İlan ID kombinasyonuyla benzersiz bir anahtar oluştur
         $viewedKey = 'viewed_listing_' . $listing->id . '_ip_' . request()->ip();
 
-        // Kullanıcı kendi ilanına bakmıyorsa VE bu IP + Oturum ikilisi daha önce bu ilana bakmadıysa artır
-        if (Auth::id() !== $listing->user_id && !session()->has($viewedKey)) {
+        // ŞARTLAR: 
+        // 1. Kullanıcı giriş yapmış olmalı (Auth::check())
+        // 2. Kendi ilanına bakmıyor olmalı (Auth::id() !== $listing->user_id)
+        // 3. Bu oturumda bu ilana ilk kez bakıyor olmalı (!session()->has($viewedKey))
+        if (Auth::check() && Auth::id() !== $listing->user_id && !session()->has($viewedKey)) {
             $listing->increment('view_count');
             
             // Anahtarı oturuma kaydet
