@@ -67,11 +67,11 @@
                     <a href="{{ route('listings.edit', $listing) }}" class="btn btn-warning">
                         <i class="bi bi-pencil"></i> Düzenle
                     </a>
-                    <form method="POST" action="{{ route('listings.destroy', $listing) }}"
-                          onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+                    {{-- MODERN İLAN SİLME --}}
+                    <form id="delete-listing-form" method="POST" action="{{ route('listings.destroy', $listing) }}">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete('delete-listing-form', 'İlan kalıcı olarak silinecektir!')">
                             <i class="bi bi-trash"></i> İlanı Sil
                         </button>
                     </form>
@@ -98,10 +98,11 @@
                                 <div class="mt-2">
                                     <button type="button" onclick="openEditModal({{ $comment->id }}, '{{ addslashes($comment->body) }}')" class="btn btn-sm btn-link text-primary p-0 me-2 text-decoration-none fw-bold">Düzenle</button>
                                     
-                                    <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="d-inline">
+                                    {{-- MODERN YORUM SİLME --}}
+                                    <form id="delete-comment-{{ $comment->id }}" action="{{ route('comments.destroy', $comment) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold" onclick="return confirm('Bu yorumu silmek istediğinize emin misiniz?')">Sil</button>
+                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold" onclick="confirmDelete('delete-comment-{{ $comment->id }}', 'Bu yorum silinecektir!')">Sil</button>
                                     </form>
                                 </div>
                             @endif
@@ -208,7 +209,6 @@
 @auth
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        {{-- Action rotasını listings.report olarak belirledik --}}
         <form action="{{ route('listings.report', $listing->id) }}" method="POST">
             @csrf
             <div class="modal-content border-0 shadow">
@@ -232,7 +232,7 @@
 </div>
 @endauth
 
-{{-- Modern Yorum Düzenleme Modalı --}}
+{{-- Yorum Düzenleme Modalı --}}
 @auth
 <div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -262,6 +262,25 @@
 
 {{-- JAVASCRIPT KODLARI --}}
 <script>
+// Genel Modern Silme Onayı
+function confirmDelete(formId, text) {
+    Swal.fire({
+        title: 'Emin misiniz?',
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, sil!',
+        cancelButtonText: 'Vazgeç'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(formId).submit();
+        }
+    });
+}
+
+// Yorum Düzenleme Modalı Açma
 function openEditModal(id, currentBody) {
     const form = document.getElementById('editCommentForm');
     form.action = '/comments/' + id;
