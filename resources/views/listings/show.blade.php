@@ -96,7 +96,6 @@
                         @auth
                             @if(Auth::id() === $comment->user_id || Auth::user()->role === 'admin')
                                 <div class="mt-2">
-                                    {{-- MODERN MODAL TETİKLEYİCİ BUTON --}}
                                     <button type="button" onclick="openEditModal({{ $comment->id }}, '{{ addslashes($comment->body) }}')" class="btn btn-sm btn-link text-primary p-0 me-2 text-decoration-none fw-bold">Düzenle</button>
                                     
                                     <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="d-inline">
@@ -205,11 +204,12 @@
 
 {{-- MODALLAR --}}
 
-{{-- Şİkayet Modalı --}}
+{{-- Şikayet Modalı --}}
 @auth
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form action="{{ route('listings.report', $listing) }}" method="POST">
+        {{-- Action rotasını listings.report olarak belirledik --}}
+        <form action="{{ route('listings.report', $listing->id) }}" method="POST">
             @csrf
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-warning text-dark">
@@ -263,14 +263,9 @@
 {{-- JAVASCRIPT KODLARI --}}
 <script>
 function openEditModal(id, currentBody) {
-    // Formun action URL'ini güncelle
     const form = document.getElementById('editCommentForm');
     form.action = '/comments/' + id;
-    
-    // Mevcut yorumu textarea içine yerleştir
     document.getElementById('editCommentInput').value = currentBody;
-    
-    // Modalı Bootstrap ile aç
     const editModal = new bootstrap.Modal(document.getElementById('editCommentModal'));
     editModal.show();
 }

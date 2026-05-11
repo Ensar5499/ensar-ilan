@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Listing;
 use App\Models\User;
-use App\Models\Report; // Complaint yerine Report modelini kullanıyoruz
+use App\Models\Complaint; // Report yerine Complaint eklendi
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -17,8 +17,8 @@ class AdminController extends Controller
             'total_listings'    => Listing::count(),
             'active_listings'   => Listing::where('status', 'active')->count(),
             'total_users'       => User::count(),
-            // Bekleyen şikayet sayısını Report modelinden çekiyoruz
-            'total_complaints'  => Report::where('status', 'pending')->count(),
+            // Bekleyen şikayet sayısını Complaint modelinden çekiyoruz
+            'total_complaints'  => Complaint::where('status', 'pending')->count(),
         ];
 
         // Sistem ayarlarını veritabanından çekiyoruz
@@ -36,7 +36,7 @@ class AdminController extends Controller
     public function complaints()
     {
         // Şikayetleri, şikayet edilen ilan ve şikayet eden kullanıcı bilgileriyle beraber çekiyoruz
-        $complaints = Report::with(['user', 'listing'])->latest()->get();
+        $complaints = Complaint::with(['user', 'listing'])->latest()->get();
         
         return view('admin.complaints', compact('complaints'));
     }

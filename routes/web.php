@@ -83,7 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update'); 
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy'); 
     
-    // Şikayet rotasını ListingController'a bağladık (Senin yazdığın report metodu orada)
+    // Şikayet rotasını ListingController'a bağladık
     Route::post('/listings/{listing}/report', [ListingController::class, 'report'])->name('listings.report'); 
     Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store'); 
 
