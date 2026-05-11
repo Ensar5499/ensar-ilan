@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-// 1. BURAYI EKLEDİK: Cloudinary kullanabilmek için gerekli
+// Cloudinary Facade'ını ekledik
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary; 
 
 class ListingController extends Controller
@@ -120,23 +120,24 @@ class ListingController extends Controller
             'title', 'description', 'price', 'city', 'district', 'category_id', 'lat', 'lng'
         ]));
 
-        // 2. BURAYI GÜNCELLEDİK: Fotoğrafları Cloudinary'e yüklüyoruz
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $i => $photo) {
-                // Eski kod: $path = $photo->store('listings', 'public');
-                // Yeni kod: Cloudinary'e yükleyip direkt linkini alıyoruz
-                $path = Cloudinary::upload($photo->getRealPath())->getSecurePath();
+                // Cloudinary'e yükleyip URL alıyoruz
+                $upload = Cloudinary::upload($photo->getRealPath(), [
+                    'folder' => 'listings'
+                ]);
+                $path = $upload->getSecurePath();
                 
                 ListingPhoto::create([
                     'listing_id' => $listing->id, 
-                    'path' => $path, // Artık dosya yolu değil, internet linki (https://...) kayıt oluyor
+                    'path' => $path,
                     'order' => $i
                 ]);
             }
         }
 
         return redirect()->route('listings.show', $listing)
-            ->with('success', 'İlanınız başarıyla ve kalıcı olarak yayınlandı!');
+            ->with('success', 'İlanınız başarıyla yayınlandı!');
     }
 
     public function edit(Listing $listing)
@@ -173,12 +174,7 @@ class ListingController extends Controller
     public function destroy(Listing $listing)
     {
         $this->authorize('delete', $listing);
-
-        // 3. NOT: Cloudinary'den silme işlemi için ek ayar gerekebilir ama 
-        // şu an resimlerin silinmemesi önceliğimiz olduğu için buraya dokunmuyoruz.
-        
         $listing->delete();
-
         return back()->with('success', 'İlan başarıyla silindi.');
     }
 }
