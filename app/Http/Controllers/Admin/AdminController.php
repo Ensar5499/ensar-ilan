@@ -35,10 +35,11 @@ class AdminController extends Controller
      */
     public function complaints()
     {
-        // Şikayetleri, şikayet edilen ilan ve şikayet eden kullanıcı bilgileriyle beraber çekiyoruz
-        $complaints = Complaint::with(['user', 'listing'])->latest()->get();
+        // ÖNEMLİ DÜZELTME: links() hatasını önlemek için get() yerine paginate(10) kullanıldı.
+        // Bu sayede şikayetler sayfa başına 10 tane olacak şekilde listelenir.
+        $complaints = Complaint::with(['user', 'listing'])->latest()->paginate(10);
         
-        // Klasör yapına uygun olarak view yolu 'admin.complaints.index' yapıldı
+        // Klasör yapına uygun olarak view yolu 'admin.complaints.index'
         return view('admin.complaints.index', compact('complaints'));
     }
 
