@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-// Cloudinary Facade'ını ekledik
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary; 
 
 class ListingController extends Controller
@@ -122,9 +121,10 @@ class ListingController extends Controller
 
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $i => $photo) {
-                // Cloudinary'e yükleyip URL alıyoruz
+                // Manuel zorlama ekledik: Render ayarları null dönse bile bu çalışacak
                 $upload = Cloudinary::upload($photo->getRealPath(), [
-                    'folder' => 'listings'
+                    'folder' => 'listings',
+                    'cloudinary_url' => 'cloudinary://598232723132484:bLim7bUknk5Y0ppMLmzCFwwFp6Y@dzoowxtjc'
                 ]);
                 $path = $upload->getSecurePath();
                 
