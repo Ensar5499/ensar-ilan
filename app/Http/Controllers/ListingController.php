@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+// 1. BURAYI EKLEDİK: Cloudinary kullanabilmek için gerekli
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary; 
 
 class ListingController extends Controller
 {
@@ -20,7 +22,6 @@ class ListingController extends Controller
     {
         $query = Listing::with(['user', 'photos'])->where('status', 'active');
 
-        // Arama ve Filtreleme İşlemleri
         if ($request->filled('search')) {
             $query->where('title', 'like', "%{$request->search}%");
         }
@@ -54,7 +55,6 @@ class ListingController extends Controller
         $listings = $query->paginate(12);
         $categories = Category::all(); 
 
-        // AJAX isteği gelirse (Sayfa yenilenmeden filtreleme için)
         if ($request->ajax()) {
             return response()->json([
                 'html' => view('listings.partials._list', compact('listings'))->render()
@@ -120,15 +120,23 @@ class ListingController extends Controller
             'title', 'description', 'price', 'city', 'district', 'category_id', 'lat', 'lng'
         ]));
 
+        // 2. BURAYI GÜNCELLEDİK: Fotoğrafları Cloudinary'e yüklüyoruz
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $i => $photo) {
-                $path = $photo->store('listings', 'public');
-                ListingPhoto::create(['listing_id' => $listing->id, 'path' => $path, 'order' => $i]);
+                // Eski kod: $path = $photo->store('listings', 'public');
+                // Yeni kod: Cloudinary'e yükleyip direkt linkini alıyoruz
+                $path = Cloudinary::upload($photo->getRealPath())->getSecurePath();
+                
+                ListingPhoto::create([
+                    'listing_id' => $listing->id, 
+                    'path' => $path, // Artık dosya yolu değil, internet linki (https://...) kayıt oluyor
+                    'order' => $i
+                ]);
             }
         }
 
         return redirect()->route('listings.show', $listing)
-            ->with('success', 'İlanınız başarıyla yayınlandı!');
+            ->with('success', 'İlanınız başarıyla ve kalıcı olarak yayınlandı!');
     }
 
     public function edit(Listing $listing)
@@ -166,10 +174,9 @@ class ListingController extends Controller
     {
         $this->authorize('delete', $listing);
 
-        foreach ($listing->photos as $photo) {
-            Storage::disk('public')->delete($photo->path);
-        }
-
+        // 3. NOT: Cloudinary'den silme işlemi için ek ayar gerekebilir ama 
+        // şu an resimlerin silinmemesi önceliğimiz olduğu için buraya dokunmuyoruz.
+        
         $listing->delete();
 
         return back()->with('success', 'İlan başarıyla silindi.');
