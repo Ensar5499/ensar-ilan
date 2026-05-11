@@ -21,9 +21,6 @@ Route::get('/ensar-kur', function() {
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
         
-        // DİKKAT: Migrate komutunu kapattık, çünkü tablolar zaten var ve hata verdiriyor.
-        // Sadece kategorileri ekliyoruz.
-
         $categories = [
             ['name' => 'Araba', 'slug' => 'araba'],
             ['name' => 'Motosiklet', 'slug' => 'motosiklet'],
@@ -81,8 +78,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/favorites/{listing}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
 
+    // --- YORUM VE ŞİKAYET GÜNCELLEMELERİ ---
     Route::post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
-    Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update'); // Yorum Düzenleme
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy'); // Yorum Silme
+    
+    Route::post('/listings/{listing}/report', [CommentController::class, 'report'])->name('listings.report'); // İlan Şikayet (CommentController içindeki yeni metod)
+    Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store'); // Mevcut Şikayet Rotan
 
     Route::post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
     Route::get('/orders/success', [CheckoutController::class, 'success'])->name('orders.success');
