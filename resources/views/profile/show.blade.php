@@ -126,7 +126,7 @@
             </div>
         </div>
 
-        {{-- Favorilerim (Düzeltilen Kısım) --}}
+        {{-- Favorilerim --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-bold">
                 Favorilerim ({{ $favorites->count() }})
@@ -139,7 +139,7 @@
                                 <a href="{{ route('listings.show', $fav->listing) }}" class="text-decoration-none">
                                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 100px; overflow: hidden;">
                                         @if($fav->listing->photos->isNotEmpty())
-                                            <img src="{{ Storage::url($fav->listing->photos->first()->path) }}"
+                                            <img src="{{ $fav->listing->photos->first()->path }}"
                                                  class="mw-100 mh-100" 
                                                  style="object-fit: contain;" 
                                                  alt="{{ $fav->listing->title }}">

@@ -25,11 +25,11 @@
                     </div>
                 @endauth
 
-                {{-- Resim Alanı (Ana Sayfa ile Aynı Yapıldı - Contain Modu) --}}
+                {{-- Resim Alanı (Cloudinary Düzeltmesi Yapıldı) --}}
                 <a href="{{ route('listings.show', $favorite->listing) }}" class="text-decoration-none">
                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px; overflow: hidden;">
                         @if($favorite->listing->photos->isNotEmpty())
-                            <img src="{{ Storage::url($favorite->listing->photos->first()->path) }}"
+                            <img src="{{ $favorite->listing->photos->first()->path }}"
                                  class="mw-100 mh-100" 
                                  style="object-fit: contain;" 
                                  alt="{{ $favorite->listing->title }}">
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.favorite-ajax-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const card = this.closest('.col-md-4'); // Favoriden çıkarınca kartı gizlemek istersen kullanabilirsin
+            const card = this.closest('.col-md-4'); 
             
             fetch(this.action, {
                 method: 'POST',
@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }).then(response => {
                 if (response.ok) {
-                    // Favoriler sayfasında olduğumuz için çıkarılan ilanı ekrandan anında silelim
                     card.style.transition = '0.3s';
                     card.style.opacity = '0';
                     setTimeout(() => card.remove(), 300);
