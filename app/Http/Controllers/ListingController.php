@@ -71,20 +71,30 @@ class ListingController extends Controller
      */
     public function show(Listing $listing)
     {
-        // IP ve İlan ID kombinasyonuyla benzersiz bir anahtar oluştur
-        $viewedKey = 'viewed_listing_' . $listing->id . '_ip_' . request()->ip();
+        // 1. Benzersiz bir anahtar oluştur (İlan ID ve IP ile)
+        $cookieName = 'viewed_listing_' . $listing->id;
 
         // ŞARTLAR: 
-        // 1. Kullanıcı giriş yapmış olmalı (Auth::check())
-        // 2. Kendi ilanına bakmıyor olmalı (Auth::id() !== $listing->user_id)
-        // 3. Bu oturumda bu ilana ilk kez bakıyor olmalı (!session()->has($viewedKey))
-        if (Auth::check() && Auth::id() !== $listing->user_id && !session()->has($viewedKey)) {
-            $listing->increment('view_count');
+        // - Giriş yapmış olmalı
+        // - Kendi ilanı olmamalı
+        // - Tarayıcıda bu ilan için "bakıldı" çerezi olmamalı
+        if (Auth::check() && Auth::id() !== $listing->user_id && !request()->cookie($cookieName)) {
             
-            // Anahtarı oturuma kaydet
-            session()->put($viewedKey, true);
+            $listing->increment('view_count');
+
+            // 2. Çerezi hazırla: 1 gün (1440 dakika) boyunca geçerli kalsın
+            // Böylece hesaptan çıksa bile bu çerez tarayıcıda kalır.
+            $cookie = cookie($cookieName, true, 1440); 
+
+            $listing->load(['user', 'photos', 'comments.user', 'category']);
+            
+            // 3. Görünümü çerezle birlikte döndür
+            return response()
+                ->view('listings.show', compact('listing'))
+                ->withCookie($cookie);
         }
 
+        // Eğer zaten bakılmışsa veya şartlar uymuyorsa normal döndür
         $listing->load(['user', 'photos', 'comments.user', 'category']);
         return view('listings.show', compact('listing'));
     }
