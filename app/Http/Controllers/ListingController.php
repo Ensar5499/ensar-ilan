@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary; 
+// SDK'yı doğrudan kullanmak için bunu ekledik
+use Cloudinary\Configuration\Configuration;
+use Cloudinary\Api\Upload\UploadApi;
 
 class ListingController extends Controller
 {
@@ -120,13 +122,17 @@ class ListingController extends Controller
         ]));
 
         if ($request->hasFile('photos')) {
+            // Cloudinary yapılandırmasını el ile kuruyoruz (Pakete güvenmiyoruz)
+            Configuration::instance('cloudinary://598232723132484:bLim7bUknk5Y0ppMLmzCFwwFp6Y@dzoowxtjc?secure=true');
+            $uploadApi = new UploadApi();
+
             foreach ($request->file('photos') as $i => $photo) {
-                // Manuel zorlama ekledik: Render ayarları null dönse bile bu çalışacak
-                $upload = Cloudinary::upload($photo->getRealPath(), [
-                    'folder' => 'listings',
-                    'cloudinary_url' => 'cloudinary://598232723132484:bLim7bUknk5Y0ppMLmzCFwwFp6Y@dzoowxtjc'
+                // Doğrudan SDK üzerinden yükleme yapıyoruz
+                $upload = $uploadApi->upload($photo->getRealPath(), [
+                    'folder' => 'listings'
                 ]);
-                $path = $upload->getSecurePath();
+                
+                $path = $upload['secure_url'];
                 
                 ListingPhoto::create([
                     'listing_id' => $listing->id, 
