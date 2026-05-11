@@ -67,20 +67,19 @@ class ListingController extends Controller
     }
 
     /**
-     * İlan detay sayfasını gösterir ve görüntülenme sayısını kontrol eder.
+     * İlan detay sayfasını gösterir ve görüntülenme sayısını IP tabanlı kontrol eder.
      */
     public function show(Listing $listing)
     {
-        // Session (oturum) üzerinden bu ilana daha önce bakılıp bakılmadığını kontrol et
-        $viewed = session()->get('viewed_listings', []);
+        // IP ve İlan ID kombinasyonuyla benzersiz bir anahtar oluştur (Örn: viewed_listing_5_ip_127.0.0.1)
+        $viewedKey = 'viewed_listing_' . $listing->id . '_ip_' . request()->ip();
 
-        // Kullanıcı kendi ilanına bakmıyorsa VE bu oturumda bu ilana ilk kez bakıyorsa artır
-        if (Auth::id() !== $listing->user_id && !in_array($listing->id, $viewed)) {
-            // Veritabanındaki sütun adın 'view_count' olduğu için onu artırıyoruz
+        // Kullanıcı kendi ilanına bakmıyorsa VE bu IP + Oturum ikilisi daha önce bu ilana bakmadıysa artır
+        if (Auth::id() !== $listing->user_id && !session()->has($viewedKey)) {
             $listing->increment('view_count');
             
-            // Bu ilan ID'sini oturuma ekle ki bir dahaki yenilemede artmasın
-            session()->push('viewed_listings', $listing->id);
+            // Anahtarı oturuma kaydet
+            session()->put($viewedKey, true);
         }
 
         $listing->load(['user', 'photos', 'comments.user', 'category']);
