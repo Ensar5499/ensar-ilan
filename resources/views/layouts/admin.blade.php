@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,7 @@
 
     <style>
         /* Sidebar ve İçeriği yan yana zorlayan yapı */
-        body, html { height: 100%; margin: 0; }
+        body, html { height: 100%; margin: 0; transition: background .3s ease; }
         .admin-container { display: flex; min-height: 100vh; width: 100%; }
         
         .sidebar { 
@@ -38,16 +38,44 @@
 
         /* SweetAlert Bildirim Stilini Düzeltme */
         .swal2-container { z-index: 9999 !important; }
+
+        /* DARK MODE UYARLAMALARI */
+        [data-bs-theme="dark"] .main-content {
+            background: #121212;
+            color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] .card {
+            background: #1e1e1e;
+            border-color: #333;
+            color: #fff;
+        }
+        [data-bs-theme="dark"] .table {
+            color: #e2e8f0;
+            border-color: #333;
+        }
     </style>
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+    </script>
 </head>
 <body class="bg-light">
 
 <div class="admin-container">
     {{-- Sidebar --}}
     <aside class="sidebar p-3">
-        <div class="brand mb-4 pb-3 px-2">
-            <i class="bi bi-shield-check"></i> Admin Panel
+        <div class="brand mb-4 pb-3 px-2 d-flex align-items-center justify-content-between">
+            <span><i class="bi bi-shield-check"></i> Admin Panel</span>
+            
+            {{-- Karanlık Mod Toggle --}}
+            <a href="#" id="darkModeToggle" style="color: #94a3b8; text-decoration: none;">
+                <i class="bi bi-moon-stars-fill" id="darkModeIcon"></i>
+            </a>
         </div>
+        
         <nav class="nav flex-column gap-1">
             <a href="{{ route('admin.dashboard') }}"
                class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -101,10 +129,37 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-{{-- Global Silme Onayı Scripti --}}
 <script>
+    // Karanlık Mod Mantığı
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    const htmlElement = document.documentElement;
+
+    function updateAdminIcon(theme) {
+        if (theme === 'dark') {
+            darkModeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+            darkModeIcon.style.color = '#ffc107';
+        } else {
+            darkModeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+            darkModeIcon.style.color = '#94a3b8';
+        }
+    }
+
+    // İlk yüklemede ikonu ayarla
+    updateAdminIcon(htmlElement.getAttribute('data-bs-theme'));
+
+    darkModeToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+        htmlElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateAdminIcon(newTheme);
+    });
+
+    // Global Silme Onayı Scripti
     document.addEventListener('click', function (e) {
-        // .delete-btn sınıfına sahip butona tıklandığında çalışır
         const button = e.target.closest('.delete-btn');
         if (button) {
             e.preventDefault();
