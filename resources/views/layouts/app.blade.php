@@ -102,6 +102,38 @@
         [data-bs-theme="dark"] .text-muted{
             color:#ddd !important;
         }
+        /* Ana Sayfadaki Beyaz Select Kutularını Karartma */
+[data-bs-theme="dark"] .form-select, 
+[data-bs-theme="dark"] .form-control {
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
+
+/* Seçenekler (açılan liste) için arka plan ayarı */
+[data-bs-theme="dark"] option {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+}
+
+/* Arama kutusu ve inputların içindeki placeholder (silik yazı) rengi */
+[data-bs-theme="dark"] ::placeholder {
+    color: #adb5bd !important;
+}
+/* Select2 Arama Kutularını Karanlık Moda Uyarlama */
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-selection {
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+[data-bs-theme="dark"] .select2-dropdown {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
     </style>
 
 <script>
