@@ -13,8 +13,8 @@
                     @foreach($listing->photos as $i => $photo)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
                             <div class="d-flex align-items-center justify-content-center" style="height: 500px; background-color: #f8f9fa;">
-                                {{-- asset() kullanımı Render sunucusunda dosya yolu için daha garantidir --}}
-                                <img src="{{ asset('storage/' . $photo->path) }}"
+                                {{-- DEĞİŞİKLİK BURADA: Artık asset() ve 'storage/' kullanmıyoruz --}}
+                                <img src="{{ $photo->path }}"
                                      class="mw-100 mh-100 d-block shadow-sm" 
                                      style="width: auto; height: auto; object-fit: contain;"
                                      alt="Fotoğraf {{ $i+1 }}"
@@ -166,7 +166,6 @@
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Koordinat yoksa Eskişehir merkez alarak haritayı başlatır
                 var lat = parseFloat("{{ $listing->lat }}") || 39.7767;
                 var lng = parseFloat("{{ $listing->lng }}") || 30.5206;
                 
@@ -176,7 +175,6 @@
                         attribution: '&copy; OpenStreetMap'
                     }).addTo(map);
                     L.marker([lat, lng]).addTo(map);
-                    // Render üzerindeki yükleme gecikmeleri için haritayı tazele
                     setTimeout(function(){ map.invalidateSize(); }, 600);
                 } catch (e) {
                     console.error("Harita hatası:", e);

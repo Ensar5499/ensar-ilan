@@ -20,7 +20,8 @@
                 <a href="{{ route('listings.show', $listing) }}" class="text-decoration-none">
                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px; overflow: hidden;">
                         @if($listing->photos->isNotEmpty())
-                            <img src="{{ Storage::url($listing->photos->first()->path) }}" class="mw-100 mh-100" style="object-fit: contain;" alt="{{ $listing->title }}">
+                            {{-- DEĞİŞİKLİK BURADA: Artık Storage::url kullanmıyoruz, direkt path basıyoruz --}}
+                            <img src="{{ $listing->photos->first()->path }}" class="mw-100 mh-100" style="object-fit: contain;" alt="{{ $listing->title }}">
                         @else
                             <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-secondary text-white-50">
                                 <i class="bi bi-image" style="font-size:3rem"></i>
