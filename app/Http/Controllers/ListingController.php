@@ -66,12 +66,21 @@ class ListingController extends Controller
         return view('listings.index', compact('listings', 'categories'));
     }
 
+    /**
+     * İlan detay sayfasını gösterir ve görüntülenme sayısını kontrol eder.
+     */
     public function show(Listing $listing)
     {
-        $viewedKey = 'viewed_listing_' . $listing->id;
-        if (Auth::id() !== $listing->user_id && !session()->has($viewedKey)) {
+        // Session (oturum) üzerinden bu ilana daha önce bakılıp bakılmadığını kontrol et
+        $viewed = session()->get('viewed_listings', []);
+
+        // Kullanıcı kendi ilanına bakmıyorsa VE bu oturumda bu ilana ilk kez bakıyorsa artır
+        if (Auth::id() !== $listing->user_id && !in_array($listing->id, $viewed)) {
+            // Veritabanındaki sütun adın 'view_count' olduğu için onu artırıyoruz
             $listing->increment('view_count');
-            session()->put($viewedKey, true);
+            
+            // Bu ilan ID'sini oturuma ekle ki bir dahaki yenilemede artmasın
+            session()->push('viewed_listings', $listing->id);
         }
 
         $listing->load(['user', 'photos', 'comments.user', 'category']);
@@ -123,12 +132,11 @@ class ListingController extends Controller
         ]));
 
         if ($request->hasFile('photos')) {
-            // Cloudinary yapılandırmasını el ile kuruyoruz (Pakete güvenmiyoruz)
+            // Cloudinary yapılandırmasını el ile kuruyoruz
             Configuration::instance('cloudinary://598232723132484:bLim7bUknk5Y0ppMLmzCFwwFp6Y@dzoowxtjc?secure=true');
             $uploadApi = new UploadApi();
 
             foreach ($request->file('photos') as $i => $photo) {
-                // Doğrudan SDK üzerinden yükleme yapıyoruz
                 $upload = $uploadApi->upload($photo->getRealPath(), [
                     'folder' => 'listings'
                 ]);
@@ -185,7 +193,6 @@ class ListingController extends Controller
         return back()->with('success', 'İlan başarıyla silindi.');
     }
 
-    // --- BURAYI GÜNCELLEDİK: ŞİKAYET ETME METODU (Complaint Modeline Göre) ---
     public function report(Request $request, Listing $listing)
     {
         $request->validate([
@@ -196,7 +203,7 @@ class ListingController extends Controller
             'user_id' => Auth::id(),
             'listing_id' => $listing->id,
             'reason' => $request->reason,
-            'status' => 'pending', // Varsayılan durum
+            'status' => 'pending',
         ]);
 
         return back()->with('success', 'Şikayetiniz başarıyla iletildi. İnceleme başlatılacaktır.');

@@ -242,34 +242,25 @@
             allowClear: true
         });
 
-        // DELETE SWEETALERT
-        document.addEventListener('click', function (e) {
+        // MODERNIZE EDİLMİŞ SİLME UYARISI
+        $(document).on('click', '.delete-btn', function (e) {
+            e.preventDefault();
+            const form = $(this).closest('form');
 
-            if (e.target.closest('.delete-btn')) {
-
-                e.preventDefault();
-
-                const button = e.target.closest('.delete-btn');
-                const form = button.closest('form');
-
-                Swal.fire({
-                    title: 'Emin misiniz?',
-                    text: 'Bu işlem geri alınamaz!',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Evet, sil',
-                    cancelButtonText: 'İptal',
-                    confirmButtonColor: '#dc3545'
-                }).then((result) => {
-
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-
-                });
-
-            }
-
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu içeriği silmek istediğinize emin misiniz? Bu işlem geri alınamaz!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'Vazgeç'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         });
 
     });
