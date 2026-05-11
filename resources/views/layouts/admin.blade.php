@@ -41,17 +41,28 @@
 
         /* DARK MODE UYARLAMALARI */
         [data-bs-theme="dark"] .main-content {
-            background: #121212;
+            background: #121212 !important;
             color: #e2e8f0;
         }
         [data-bs-theme="dark"] .card {
-            background: #1e1e1e;
-            border-color: #333;
-            color: #fff;
+            background: #1e1e1e !important;
+            border-color: #333 !important;
+            color: #fff !important;
+        }
+        [data-bs-theme="dark"] .card-header {
+            background: #2d2d2d !important;
+            color: #fff !important;
+            border-bottom: 1px solid #444 !important;
         }
         [data-bs-theme="dark"] .table {
-            color: #e2e8f0;
-            border-color: #333;
+            color: #e2e8f0 !important;
+            border-color: #333 !important;
+        }
+        /* Yazıların görünmesini garanti altına alan ekleme */
+        [data-bs-theme="dark"] h1, [data-bs-theme="dark"] h2, [data-bs-theme="dark"] h3, 
+        [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h5, [data-bs-theme="dark"] h6,
+        [data-bs-theme="dark"] .card-title, [data-bs-theme="dark"] label {
+            color: #ffffff !important;
         }
     </style>
 
