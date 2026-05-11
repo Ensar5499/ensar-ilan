@@ -13,7 +13,6 @@
                     @foreach($listing->photos as $i => $photo)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
                             <div class="d-flex align-items-center justify-content-center" style="height: 500px; background-color: #f8f9fa;">
-                                {{-- DEĞİŞİKLİK BURADA: Artık asset() ve 'storage/' kullanmıyoruz --}}
                                 <img src="{{ $photo->path }}"
                                      class="mw-100 mh-100 d-block shadow-sm" 
                                      style="width: auto; height: auto; object-fit: contain;"
@@ -93,6 +92,20 @@
                             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                         </div>
                         <p class="mb-0 mt-1">{{ $comment->body }}</p>
+                        
+                        {{-- YORUM DÜZENLE/SİL BUTONLARI BURADA --}}
+                        @auth
+                            @if(Auth::id() === $comment->user_id || Auth::user()->role === 'admin')
+                                <div class="mt-2">
+                                    <button type="button" onclick="editComment({{ $comment->id }}, '{{ addslashes($comment->body) }}')" class="btn btn-sm btn-link text-primary p-0 me-2 text-decoration-none">Düzenle</button>
+                                    <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="return confirm('Bu yorumu silmek istediğinize emin misiniz?')">Sil</button>
+                                    </form>
+                                </div>
+                            @endif
+                        @endauth
                     </div>
                 @endforeach
 
@@ -140,12 +153,17 @@
                             </button>
                         </form>
                         
-                        <form method="POST" action="{{ route('favorites.toggle', $listing) }}">
+                        <form method="POST" action="{{ route('favorites.toggle', $listing) }}" class="mb-2">
                             @csrf
                             <button class="btn btn-outline-danger w-100">
                                 <i class="bi bi-heart"></i> {{ $listing->isFavoritedByUser(Auth::id()) ? 'Favoriden Çıkar' : 'Favorilere Ekle' }}
                             </button>
                         </form>
+
+                        {{-- ŞİKAYET ET BUTONU --}}
+                        <button type="button" class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <i class="bi bi-exclamation-triangle"></i> İlanı Şikayet Et
+                        </button>
                     @endif
                 @endauth
             </div>
@@ -184,4 +202,50 @@
         </script>
     </div>
 </div>
+
+{{-- ŞİKAYET MODALI --}}
+@auth
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('listings.report', $listing) }}" method="POST">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">İlanı Şikayet Et</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Şikayet Nedeni</label>
+                        <textarea name="reason" class="form-control" rows="4" required placeholder="Lütfen şikayetinizi detaylandırın..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-danger">Şikayeti Gönder</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@endauth
+
+{{-- YORUM DÜZENLEME SCRIPT --}}
+<script>
+function editComment(id, currentBody) {
+    let newBody = prompt("Yorumunuzu düzenleyin:", currentBody);
+    if (newBody !== null && newBody.trim() !== "" && newBody !== currentBody) {
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/comments/' + id;
+        form.innerHTML = `
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="body" value="${newBody}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
 @endsection
