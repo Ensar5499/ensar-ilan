@@ -80,11 +80,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- YORUM VE ŞİKAYET GÜNCELLEMELERİ ---
     Route::post('/comments/{listing}', [CommentController::class, 'store'])->name('comments.store');
-    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update'); // Yorum Düzenleme
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy'); // Yorum Silme
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update'); 
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy'); 
     
-    Route::post('/listings/{listing}/report', [CommentController::class, 'report'])->name('listings.report'); // İlan Şikayet (CommentController içindeki yeni metod)
-    Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store'); // Mevcut Şikayet Rotan
+    // Şikayet rotasını ListingController'a bağladık (Senin yazdığın report metodu orada)
+    Route::post('/listings/{listing}/report', [ListingController::class, 'report'])->name('listings.report'); 
+    Route::post('/complaints/{listing}', [ComplaintController::class, 'store'])->name('complaints.store'); 
 
     Route::post('/checkout/pay', [CheckoutController::class, 'initiatePayment'])->name('checkout.pay');
     Route::get('/orders/success', [CheckoutController::class, 'success'])->name('orders.success');
@@ -101,7 +102,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/listings/{listing}/status', [AdminListingController::class, 'updateStatus'])->name('listings.status');
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
-    Route::get('/complaints', [AdminComplaintController::class, 'index'])->name('complaints.index');
+    
+    // Şikayetleri AdminController içindeki complaints metoduna yönlendirdik
+    Route::get('/complaints', [AdminController::class, 'complaints'])->name('complaints.index');
     Route::put('/complaints/{complaint}/resolve', [AdminComplaintController::class, 'resolve'])->name('complaints.resolve');
     Route::post('/settings/update', [AdminController::class, 'updateSetting'])->name('settings.update');
 });

@@ -7,6 +7,7 @@ use App\Models\ListingPhoto;
 use App\Models\UserNotification;
 use App\Models\Setting;
 use App\Models\Category;
+use App\Models\Report; // Şikayet modeli eklendi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -182,5 +183,21 @@ class ListingController extends Controller
         $this->authorize('delete', $listing);
         $listing->delete();
         return back()->with('success', 'İlan başarıyla silindi.');
+    }
+
+    // --- BURAYI YENİ EKLEDİK: ŞİKAYET ETME METODU ---
+    public function report(Request $request, Listing $listing)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        Report::create([
+            'user_id' => Auth::id(),
+            'listing_id' => $listing->id,
+            'reason' => $request->reason,
+        ]);
+
+        return back()->with('success', 'Şikayetiniz başarıyla iletildi. İnceleme başlatılacaktır.');
     }
 }

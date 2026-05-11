@@ -91,17 +91,18 @@
                             <strong>{{ $comment->user->name }}</strong>
                             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                         </div>
-                        <p class="mb-0 mt-1">{{ $comment->body }}</p>
+                        <p class="mb-0 mt-1 text-secondary" id="comment-body-{{ $comment->id }}">{{ $comment->body }}</p>
                         
-                        {{-- YORUM DÜZENLE/SİL BUTONLARI BURADA --}}
                         @auth
                             @if(Auth::id() === $comment->user_id || Auth::user()->role === 'admin')
                                 <div class="mt-2">
-                                    <button type="button" onclick="editComment({{ $comment->id }}, '{{ addslashes($comment->body) }}')" class="btn btn-sm btn-link text-primary p-0 me-2 text-decoration-none">Düzenle</button>
+                                    {{-- MODERN MODAL TETİKLEYİCİ BUTON --}}
+                                    <button type="button" onclick="openEditModal({{ $comment->id }}, '{{ addslashes($comment->body) }}')" class="btn btn-sm btn-link text-primary p-0 me-2 text-decoration-none fw-bold">Düzenle</button>
+                                    
                                     <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="return confirm('Bu yorumu silmek istediğinize emin misiniz?')">Sil</button>
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold" onclick="return confirm('Bu yorumu silmek istediğinize emin misiniz?')">Sil</button>
                                     </form>
                                 </div>
                             @endif
@@ -160,7 +161,6 @@
                             </button>
                         </form>
 
-                        {{-- ŞİKAYET ET BUTONU --}}
                         <button type="button" class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#reportModal">
                             <i class="bi bi-exclamation-triangle"></i> İlanı Şikayet Et
                         </button>
@@ -203,26 +203,28 @@
     </div>
 </div>
 
-{{-- ŞİKAYET MODALI --}}
+{{-- MODALLAR --}}
+
+{{-- Şİkayet Modalı --}}
 @auth
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <form action="{{ route('listings.report', $listing) }}" method="POST">
             @csrf
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">İlanı Şikayet Et</h5>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold">İlanı Şikayet Et</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Şikayet Nedeni</label>
+                        <label class="form-label fw-bold">Şikayet Nedeni</label>
                         <textarea name="reason" class="form-control" rows="4" required placeholder="Lütfen şikayetinizi detaylandırın..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
-                    <button type="submit" class="btn btn-danger">Şikayeti Gönder</button>
+                    <button type="submit" class="btn btn-danger px-4">Şikayeti Gönder</button>
                 </div>
             </div>
         </form>
@@ -230,22 +232,47 @@
 </div>
 @endauth
 
-{{-- YORUM DÜZENLEME SCRIPT --}}
-<script>
-function editComment(id, currentBody) {
-    let newBody = prompt("Yorumunuzu düzenleyin:", currentBody);
-    if (newBody !== null && newBody.trim() !== "" && newBody !== currentBody) {
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/comments/' + id;
-        form.innerHTML = `
+{{-- Modern Yorum Düzenleme Modalı --}}
+@auth
+<div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form id="editCommentForm" method="POST">
             @csrf
             @method('PUT')
-            <input type="hidden" name="body" value="${newBody}">
-        `;
-        document.body.appendChild(form);
-        form.submit();
-    }
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">Yorumu Düzenle</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mesajınız</label>
+                        <textarea name="body" id="editCommentInput" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary px-4">Güncelle</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@endauth
+
+{{-- JAVASCRIPT KODLARI --}}
+<script>
+function openEditModal(id, currentBody) {
+    // Formun action URL'ini güncelle
+    const form = document.getElementById('editCommentForm');
+    form.action = '/comments/' + id;
+    
+    // Mevcut yorumu textarea içine yerleştir
+    document.getElementById('editCommentInput').value = currentBody;
+    
+    // Modalı Bootstrap ile aç
+    const editModal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+    editModal.show();
 }
 </script>
 @endsection
