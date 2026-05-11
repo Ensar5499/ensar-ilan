@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,7 @@
     <style>
         body{
             background:#f8f9fa;
+            transition: background .3s ease;
         }
 
         .navbar-brand{
@@ -79,7 +80,37 @@
             width:100%;
             border-radius:12px;
         }
+
+        /* DARK MODE */
+        [data-bs-theme="dark"] body{
+            background:#121212;
+            color:#f1f1f1;
+        }
+
+        [data-bs-theme="dark"] .navbar,
+        [data-bs-theme="dark"] footer{
+            background:#1e1e1e !important;
+            border-color:#333 !important;
+        }
+
+        [data-bs-theme="dark"] .listing-card{
+            background:#1f1f1f;
+            color:#fff;
+        }
+
+        [data-bs-theme="dark"] .nav-link,
+        [data-bs-theme="dark"] .text-muted{
+            color:#ddd !important;
+        }
     </style>
+
+<script>
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    })();
+</script>
+
 </head>
 
 <body>
@@ -126,10 +157,25 @@
                         </a>
                     </li>
 
+                    {{-- PROFİL --}}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('profile.show') }}">
                             <i class="bi bi-person-circle"></i>
                             {{ Auth::user()->name }}
+                        </a>
+                    </li>
+
+                    {{-- KARANLIK MOD --}}
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center justify-content-between"
+                           href="#"
+                           id="darkModeToggle"
+                           style="cursor:pointer;">
+
+                            <span class="me-2">Karanlık Mod</span>
+
+                            <i class="bi bi-moon-stars-fill"
+                               id="darkModeIcon"></i>
                         </a>
                     </li>
 
@@ -242,7 +288,7 @@
             allowClear: true
         });
 
-        // MODERNIZE EDİLMİŞ SİLME UYARISI
+        // MODERN SİLME UYARISI
         $(document).on('click', '.delete-btn', function (e) {
             e.preventDefault();
             const form = $(this).closest('form');
@@ -267,6 +313,47 @@
 </script>
 
 @stack('scripts')
+
+{{-- DARK MODE SCRIPT --}}
+<script>
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    if (darkModeToggle) {
+
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        const htmlElement = document.documentElement;
+
+        // SAYFA YÜKLENİNCE İKON AYARLA
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        if (savedTheme === 'dark') {
+            darkModeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+            darkModeIcon.style.color = '#ffc107';
+        }
+
+        darkModeToggle.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            // TEMAYI DEĞİŞTİR
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+
+            // LOCAL STORAGE
+            localStorage.setItem('theme', newTheme);
+
+            // İKON DEĞİŞTİR
+            if (newTheme === 'dark') {
+                darkModeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                darkModeIcon.style.color = '#ffc107';
+            } else {
+                darkModeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                darkModeIcon.style.color = '';
+            }
+        });
+    }
+</script>
 
 </body>
 </html>
