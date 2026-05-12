@@ -106,6 +106,9 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Fotoğraflar</label>
                                 <input type="file" name="photos[]" class="form-control" multiple>
+                                <div id="image-preview-container" class="d-flex flex-wrap gap-2 mt-3 p-2 border border-dashed rounded" style="min-height: 100px; background: #fff;">
+    <p class="text-muted w-100 text-center my-auto" id="preview-placeholder">Seçilen fotoğraflar burada görünecek.</p>
+</div>
                             </div>
                         </div>
 
@@ -285,6 +288,37 @@
             alert('Tarayıcı desteklemiyor.');
         }
     }
+    // Fotoğraf Önizleme Mantığı
+    $('input[name="photos[]"]').on('change', function() {
+        const container = $('#image-preview-container');
+        const placeholder = $('#preview-placeholder');
+        const files = this.files;
+
+        container.find('div').remove(); // Eski önizlemeleri temizle
+        
+        if (files.length > 0) {
+            placeholder.hide();
+            $.each(files, function(i, file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const template = `
+                        <div class="position-relative" style="width: 80px; height: 80px;">
+                            <img src="${e.target.result}" class="img-thumbnail w-100 h-100" style="object-fit: cover; border-radius: 10px;">
+                            <span class="position-absolute top-0 end-0 badge rounded-pill bg-danger shadow-sm" 
+                                  style="cursor: pointer; transform: translate(30%, -30%);" 
+                                  onclick="this.parentElement.remove()">
+                                <i class="bi bi-x"></i>
+                            </span>
+                        </div>
+                    `;
+                    container.append(template);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            placeholder.show();
+        }
+    });
 </script>
 
 @endsection
