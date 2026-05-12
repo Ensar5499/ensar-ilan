@@ -6,10 +6,8 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
@@ -36,16 +34,15 @@
                     <form method="POST" action="{{ route('listings.store') }}" enctype="multipart/form-data">
                         @csrf
                         @if ($errors->any())
-    <div class="alert alert-danger mb-4 shadow-sm">
-        <h6 class="fw-bold">Eksik veya Hatalı Bilgi Var:</h6>
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-                        
+                            <div class="alert alert-danger mb-4 shadow-sm">
+                                <h6 class="fw-bold">Eksik veya Hatalı Bilgi Var:</h6>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">İlan Başlığı</label>
@@ -62,14 +59,12 @@
                                 <label class="form-label fw-bold">Fiyat (₺)</label>
                                 <input type="number" name="price" class="form-control" required>
                             </div>
-
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Şehir</label>
                                 <select name="city" id="city_select" class="form-select select2-searchable" required>
                                     <option value="">Şehir Seçin</option>
                                 </select>
                             </div>
-
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">İlçe</label>
                                 <select name="district" id="district_select" class="form-select select2-searchable" required disabled>
@@ -84,31 +79,16 @@
                                 <select name="category_id" class="form-select" required>
                                     <option value="">Kategori seçin</option>
                                     <option value="1">Araba</option>
-                                    <option value="2">Motosiklet</option>
-                                    <option value="3">Bisiklet</option>
-                                    <option value="4">Arsa & Arazi</option>
-                                    <option value="5">Konut / Daire</option>
-                                    <option value="6">İşyeri / Ofis</option>
                                     <option value="7">Elektronik</option>
-                                    <option value="8">Telefon / Tablet</option>
-                                    <option value="9">Bilgisayar</option>
-                                    <option value="10">Kıyafet & Moda</option>
-                                    <option value="11">Spor / Outdoor</option>
-                                    <option value="12">Ev / Mobilya</option>
-                                    <option value="13">İkinci El</option>
-                                    <option value="14">İş Makineleri</option>
-                                    <option value="15">Hobi / Oyun</option>
-                                    <option value="16">Evcil Hayvan</option>
-                                    <option value="17">Diğer</option>
-                                </select>
+                                    </select>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Fotoğraflar</label>
-                                <input type="file" name="photos[]" class="form-control" multiple>
+                                <input type="file" name="photos[]" id="photo-input" class="form-control" multiple>
                                 <div id="image-preview-container" class="d-flex flex-wrap gap-2 mt-3 p-2 border border-dashed rounded" style="min-height: 100px; background: #fff;">
-    <p class="text-muted w-100 text-center my-auto" id="preview-placeholder">Seçilen fotoğraflar burada görünecek.</p>
-</div>
+                                    <p class="text-muted w-100 text-center my-auto" id="preview-placeholder">Seçilen fotoğraflar burada görünecek.</p>
+                                </div>
                             </div>
                         </div>
 
@@ -140,7 +120,7 @@
 
 <script>
     const turkeyData = {
-        "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
+       "Adana": ["Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"],
         "Adıyaman": ["Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"],
         "Afyonkarahisar": ["Başmakçı", "Bayat", "Bolvadin", "Çay", "Çobanlar", "Dazkırı", "Dinar", "Emirdağ", "Evciler", "Hocalar", "İhsaniye", "İscehisar", "Kızılören", "Merkez", "Sandıklı", "Sinanpaşa", "Sultandağı", "Şuhut"],
         "Ağrı": ["Diyadin", "Doğubayazıt", "Eleşkirt", "Hamur", "Merkez", "Patnos", "Taşlıçay", "Tutak"],
@@ -223,102 +203,95 @@
         "Zonguldak": ["Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"]
     };
 
+
     let map, marker;
+    let allFiles = new DataTransfer();
 
     $(document).ready(function(){
-        // Select2 Başlat
-        $('.select2-searchable').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-        });
-
-        // Şehirleri Doldur
+        // Select2 ve Şehir Seçimi
+        $('.select2-searchable').select2({ theme: 'bootstrap-5', width: '100%' });
+        
         const citySelect = $('#city_select');
-        const districtSelect = $('#district_select');
-
-        Object.keys(turkeyData).sort((a,b) => a.localeCompare(b,'tr')).forEach(city => {
+        Object.keys(turkeyData).sort().forEach(city => {
             citySelect.append(`<option value="${city}">${city}</option>`);
         });
 
-        // Şehir Değişimi
         citySelect.on('change', function(){
             const selectedCity = $(this).val();
+            const districtSelect = $('#district_select');
             districtSelect.html('<option value="">İlçe Seçin</option>');
-
             if(selectedCity && turkeyData[selectedCity]){
                 districtSelect.prop('disabled', false);
-                turkeyData[selectedCity].sort((a,b) => a.localeCompare(b,'tr')).forEach(district => {
-                    districtSelect.append(`<option value="${district}">${district}</option>`);
-                });
+                turkeyData[selectedCity].forEach(d => districtSelect.append(`<option value="${d}">${d}</option>`));
             } else {
                 districtSelect.prop('disabled', true);
             }
-            districtSelect.trigger('change');
         });
 
-        // Harita Başlat
+        // Harita İşlemleri
         map = L.map('map').setView([39.0, 35.0], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        map.on('click', e => updateMarker(e.latlng.lat, e.latlng.lng));
 
-        map.on('click', function(e){
-            updateMarker(e.latlng.lat, e.latlng.lng);
+        // FOTOĞRAF ÖNİZLEME VE BİRİKTİRME MANTIĞI
+        $('#photo-input').on('change', function() {
+            const container = $('#image-preview-container');
+            const placeholder = $('#preview-placeholder');
+            const newFiles = this.files;
+
+            placeholder.hide();
+
+            $.each(newFiles, function(i, file) {
+                allFiles.items.add(file); // Yeni seçileni sepete at
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const template = `
+                        <div class="position-relative preview-box" style="width: 80px; height: 80px;">
+                            <img src="${e.target.result}" class="img-thumbnail w-100 h-100" style="object-fit: cover; border-radius: 10px;">
+                            <span class="position-absolute top-0 end-0 badge rounded-pill bg-danger remove-btn" 
+                                  style="cursor: pointer; transform: translate(30%, -30%);">
+                                <i class="bi bi-x"></i>
+                            </span>
+                        </div>`;
+                    container.append(template);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            this.files = allFiles.files; // Inputu güncelle
+        });
+
+        // FOTOĞRAF SİLME
+        $(document).on('click', '.remove-btn', function() {
+            const index = $(this).closest('.preview-box').index('.preview-box');
+            $(this).closest('.preview-box').remove();
+
+            let updatedFiles = new DataTransfer();
+            for (let i = 0; i < allFiles.files.length; i++) {
+                if (i !== index) updatedFiles.items.add(allFiles.files[i]);
+            }
+            allFiles = updatedFiles;
+            $('#photo-input')[0].files = allFiles.files;
+
+            if (allFiles.files.length === 0) placeholder.show();
         });
     });
 
     function updateMarker(lat, lng){
         if(marker) map.removeLayer(marker);
         marker = L.marker([lat, lng]).addTo(map);
-        $('#lat').val(lat);
-        $('#lng').val(lng);
+        $('#lat').val(lat); $('#lng').val(lng);
     }
 
     function getLocation(){
         if(navigator.geolocation){
-            navigator.geolocation.getCurrentPosition(function(position){
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                map.setView([lat, lng], 15);
-                updateMarker(lat, lng);
-            }, function(){
-                alert('Konum alınamadı.');
+            navigator.geolocation.getCurrentPosition(p => {
+                map.setView([p.coords.latitude, p.coords.longitude], 15);
+                updateMarker(p.coords.latitude, p.coords.longitude);
             });
-        } else {
-            alert('Tarayıcı desteklemiyor.');
         }
     }
-    // Fotoğraf Önizleme Mantığı
-    $('input[name="photos[]"]').on('change', function() {
-        const container = $('#image-preview-container');
-        const placeholder = $('#preview-placeholder');
-        const files = this.files;
-
-        container.find('div').remove(); // Eski önizlemeleri temizle
-        
-        if (files.length > 0) {
-            placeholder.hide();
-            $.each(files, function(i, file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const template = `
-                        <div class="position-relative" style="width: 80px; height: 80px;">
-                            <img src="${e.target.result}" class="img-thumbnail w-100 h-100" style="object-fit: cover; border-radius: 10px;">
-                            <span class="position-absolute top-0 end-0 badge rounded-pill bg-danger shadow-sm" 
-                                  style="cursor: pointer; transform: translate(30%, -30%);" 
-                                  onclick="this.parentElement.remove()">
-                                <i class="bi bi-x"></i>
-                            </span>
-                        </div>
-                    `;
-                    container.append(template);
-                };
-                reader.readAsDataURL(file);
-            });
-        } else {
-            placeholder.show();
-        }
-    });
 </script>
 
 @endsection
