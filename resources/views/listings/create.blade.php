@@ -77,10 +77,25 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Kategori</label>
                                 <select name="category_id" class="form-select" required>
-                                    <option value="">Kategori seçin</option>
-                                    <option value="1">Araba</option>
-                                    <option value="7">Elektronik</option>
-                                    </select>
+    <option value="">Kategori seçin</option>
+    <option value="1">Araba</option>
+    <option value="2">Motosiklet</option>
+    <option value="3">Bisiklet</option>
+    <option value="4">Arsa & Arazi</option>
+    <option value="5">Konut / Daire</option>
+    <option value="6">İşyeri / Ofis</option>
+    <option value="7">Elektronik</option>
+    <option value="8">Telefon / Tablet</option>
+    <option value="9">Bilgisayar</option>
+    <option value="10">Kıyafet & Moda</option>
+    <option value="11">Spor / Outdoor</option>
+    <option value="12">Ev / Mobilya</option>
+    <option value="13">İkinci El</option>
+    <option value="14">İş Makineleri</option>
+    <option value="15">Hobi / Oyun</option>
+    <option value="16">Evcil Hayvan</option>
+    <option value="17">Diğer</option>
+</select>
                             </div>
 
                             <div class="col-md-6">
