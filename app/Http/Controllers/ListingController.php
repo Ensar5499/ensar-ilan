@@ -70,34 +70,34 @@ class ListingController extends Controller
      * İlan detay sayfasını gösterir ve görüntülenme sayısını IP tabanlı kontrol eder.
      */
     public function show(Listing $listing)
-    {
-        // 1. Benzersiz bir anahtar oluştur (İlan ID ve IP ile)
-        $cookieName = 'viewed_listing_' . $listing->id;
+{
+    // 1. Çerez ismini belirle (Her ilan için ayrı çerez)
+    $cookieName = 'viewed_listing_' . $listing->id;
 
-        // ŞARTLAR: 
-        // - Giriş yapmış olmalı
-        // - Kendi ilanı olmamalı
-        // - Tarayıcıda bu ilan için "bakıldı" çerezi olmamalı
-        if (Auth::check() && Auth::id() !== $listing->user_id && !request()->cookie($cookieName)) {
-            
-            $listing->increment('view_count');
+    // ŞARTLAR:
+    // - Kullanıcı giriş yapmış olmalı (Auth::check)
+    // - Kendi ilanı olmamalı (Auth::id !== listing->user_id)
+    // - Bu tarayıcıda daha önce bu ilan için çerez oluşmamış olmalı (!request()->cookie)
+    if (Auth::check() && Auth::id() !== $listing->user_id && !request()->cookie($cookieName)) {
+        
+        // Görüntülenme sayısını 1 artır
+        $listing->increment('view_count');
 
-            // 2. Çerezi hazırla: 1 gün (1440 dakika) boyunca geçerli kalsın
-            // Böylece hesaptan çıksa bile bu çerez tarayıcıda kalır.
-            $cookie = cookie($cookieName, true, 1440); 
+        // Çerezi oluştur: 1 yıl (525600 dakika) boyunca bu tarayıcıda kalsın. 
+        // Böylece kullanıcı bir daha artış tetikleyemez.
+        $cookie = cookie($cookieName, 'true', 525600); 
 
-            $listing->load(['user', 'photos', 'comments.user', 'category']);
-            
-            // 3. Görünümü çerezle birlikte döndür
-            return response()
-                ->view('listings.show', compact('listing'))
-                ->withCookie($cookie);
-        }
-
-        // Eğer zaten bakılmışsa veya şartlar uymuyorsa normal döndür
         $listing->load(['user', 'photos', 'comments.user', 'category']);
-        return view('listings.show', compact('listing'));
+        
+        return response()
+            ->view('listings.show', compact('listing'))
+            ->withCookie($cookie);
     }
+
+    // Eğer kullanıcı giriş yapmamışsa, kendi ilanıysa veya zaten bakmışsa sayı artmaz, direkt sayfayı gösterir.
+    $listing->load(['user', 'photos', 'comments.user', 'category']);
+    return view('listings.show', compact('listing'));
+}
 
     public function create()
     {
