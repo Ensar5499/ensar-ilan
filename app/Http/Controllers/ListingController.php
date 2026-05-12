@@ -71,30 +71,25 @@ class ListingController extends Controller
      */
     public function show(Listing $listing)
 {
-    // 1. Çerez ismini belirle (Her ilan için ayrı çerez)
     $cookieName = 'viewed_listing_' . $listing->id;
-
-    // ŞARTLAR:
-    // - Kullanıcı giriş yapmış olmalı (Auth::check)
-    // - Kendi ilanı olmamalı (Auth::id !== listing->user_id)
-    // - Bu tarayıcıda daha önce bu ilan için çerez oluşmamış olmalı (!request()->cookie)
-    if (Auth::check() && Auth::id() !== $listing->user_id && !request()->cookie($cookieName)) {
+    $hasViewed = request()->cookie($cookieName);
+    
+    // Şartlar: Giriş yapmış olacak, sahibi olmayacak, daha önce bakmamış olacak
+    if (Auth::check() && Auth::id() !== $listing->user_id && !$hasViewed) {
         
-        // Görüntülenme sayısını 1 artır
+        // ÖNEMLİ: Eğer veritabanında sütun adın 'views' ise burayı 'views' yap!
         $listing->increment('view_count');
 
-        // Çerezi oluştur: 1 yıl (525600 dakika) boyunca bu tarayıcıda kalsın. 
-        // Böylece kullanıcı bir daha artış tetikleyemez.
-        $cookie = cookie($cookieName, 'true', 525600); 
-
+        // İlan verilerini yükle
         $listing->load(['user', 'photos', 'comments.user', 'category']);
-        
+
+        // Çerez ile birlikte döndür (1 yıl geçerli)
         return response()
             ->view('listings.show', compact('listing'))
-            ->withCookie($cookie);
+            ->withCookie(cookie($cookieName, 'true', 525600));
     }
 
-    // Eğer kullanıcı giriş yapmamışsa, kendi ilanıysa veya zaten bakmışsa sayı artmaz, direkt sayfayı gösterir.
+    // Şartlar sağlanmıyorsa (Misafir, Sahibi veya Zaten Bakmış olan) normal döndür
     $listing->load(['user', 'photos', 'comments.user', 'category']);
     return view('listings.show', compact('listing'));
 }
