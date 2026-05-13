@@ -15,31 +15,25 @@ class WebhookController extends Controller
     {
         $signature = $request->header('X-Nova-Signature');
         $rawBody   = $request->getContent();
-        $data      = json_decode($rawBody, true);
 
-        // ── Gelen her şeyi logla (debug için) ─────────────────────────────
-        Log::info('Nova webhook alındı', [
-            'event'        => $data['event'] ?? 'YOK',
-            'order_id'     => $data['order_id'] ?? 'YOK',
-            'signature'    => $signature ? substr($signature, 0, 20) . '...' : 'YOK',
-            'body_preview' => substr($rawBody, 0, 200),
-        ]);
-
-        // ── İmza doğrulama ─────────────────────────────────────────────────
+        // 1. İmza doğrulama — sahte istekleri engeller
         if (!$this->novaBanka->verifyWebhook($rawBody, $signature ?? '')) {
-            // İmza hatalıysa logla ama yine de işlemi dene (geliştirme aşaması)
-            Log::warning('Nova webhook: İmza doğrulaması başarısız! Yine de işleniyor...', [
-                'signature_received' => $signature,
+            Log::warning('Nova webhook: Geçersiz imza!', [
+                'ip' => $request->ip(),
             ]);
-            // TODO: Canlıya geçince bu satırı açıp alttaki bloğu kaldır:
-            // return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // ── Ödeme tamamlandı eventi ────────────────────────────────────────
+        $data = json_decode($rawBody, true);
+
+        Log::info('Nova webhook alındı', [
+            'event'    => $data['event'] ?? 'YOK',
+            'order_id' => $data['order_id'] ?? 'YOK',
+        ]);
+
+        // 2. Ödeme tamamlandı eventi
         if (isset($data['event']) && $data['event'] === 'payment.completed') {
             $orderId = $data['order_id'] ?? null;
-
-            Log::info('Nova webhook: payment.completed alındı', ['order_id' => $orderId]);
 
             // order_id formatı: ENS-{listing_id}-{uniqid}
             if ($orderId && preg_match('/^ENS-(\d+)-/', $orderId, $matches)) {
@@ -59,14 +53,11 @@ class WebhookController extends Controller
                         'order_id'   => $orderId,
                     ]);
                 }
-            } else {
-                Log::error('Webhook: order_id formatı tanınmadı', ['order_id' => $orderId]);
             }
 
             return response()->json(['received' => true]);
         }
 
-        Log::info('Nova webhook: Bilinmeyen event', ['event' => $data['event'] ?? 'YOK']);
         return response()->json(['received' => true, 'status' => 'ignored']);
     }
 }
