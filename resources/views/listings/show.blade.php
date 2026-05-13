@@ -147,6 +147,7 @@
 
                         <form method="POST" action="{{ route('checkout.pay') }}" class="mb-2">
                             @csrf
+                            <input type="hidden" name="listing_id" value="{{ $listing->id }}">
                             <input type="hidden" name="amount" value="{{ $listing->price }}">
                             <input type="hidden" name="description" value="{{ $listing->title }} - İlan Ödemesi">
                             <button type="submit" class="btn btn-success w-100">
