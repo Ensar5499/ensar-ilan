@@ -35,17 +35,20 @@ class CheckoutController extends Controller
             return back()->with('error', 'Satıcının IBAN bilgisi eksik, ödeme yapılamıyor.');
         }
 
+        // Boşlukları temizle, büyük harfe çevir (TR12 3456 → TR12345...)
+        $sellerIban = strtoupper(str_replace(' ', '', $sellerIban));
+
         // ── 2. Sipariş paketini hazırla ───────────────────────────────────
         $user = Auth::user();
 
         $orderData = [
             'order_id'       => 'ENS-' . strtoupper(uniqid()),
-            'amount'         => (float) $listing->price,   // Formdan değil, DB'den al (güvenlik)
+            'amount'         => (float) $listing->price,
             'currency'       => 'TRY',
             'description'    => $listing->title . ' - İlan Ödemesi',
             'customer_name'  => $user->name,
             'customer_email' => $user->email,
-            'seller_iban'    => $sellerIban,               // Satıcının IBAN'ı bankaya gönderiliyor
+            'seller_iban'    => $sellerIban,
             'return_url'     => route('orders.success'),
             'webhook_url'    => route('webhook.nova'),
         ];
@@ -77,6 +80,6 @@ class CheckoutController extends Controller
      */
     public function success(Request $request)
     {
-        return view('listings.payment_success'); // ya da mevcut bir view
+        return view('listings.payment_success');
     }
 }
