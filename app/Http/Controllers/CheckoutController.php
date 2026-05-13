@@ -35,14 +35,15 @@ class CheckoutController extends Controller
             return back()->with('error', 'Satıcının IBAN bilgisi eksik, ödeme yapılamıyor.');
         }
 
-        // Boşlukları temizle, büyük harfe çevir (TR12 3456 → TR12345...)
+        // Boşlukları temizle, büyük harfe çevir
         $sellerIban = strtoupper(str_replace(' ', '', $sellerIban));
 
         // ── 2. Sipariş paketini hazırla ───────────────────────────────────
         $user = Auth::user();
 
         $orderData = [
-            'order_id'       => 'ENS-' . strtoupper(uniqid()),
+            // listing_id'yi order_id'ye gömdük — webhook'ta ilanı bulmak için
+            'order_id'       => 'ENS-' . $listing->id . '-' . strtoupper(uniqid()),
             'amount'         => (float) $listing->price,
             'currency'       => 'TRY',
             'description'    => $listing->title . ' - İlan Ödemesi',
