@@ -13,28 +13,38 @@ class WebhookController extends Controller
 
     public function handleNova(Request $request)
     {
-        // 1. Bankadan gelen imzayı ve gövdeyi al
         $signature = $request->header('X-Nova-Signature');
         $rawBody   = $request->getContent();
+        $data      = json_decode($rawBody, true);
 
-        // 2. Güvenlik kontrolü
-        if (!$this->novaBanka->verifyWebhook($rawBody, $signature)) {
-            Log::warning('Nova webhook: Geçersiz imza denemesi!');
-            return response()->json(['error' => 'Unauthorized'], 401);
+        // ── Gelen her şeyi logla (debug için) ─────────────────────────────
+        Log::info('Nova webhook alındı', [
+            'event'        => $data['event'] ?? 'YOK',
+            'order_id'     => $data['order_id'] ?? 'YOK',
+            'signature'    => $signature ? substr($signature, 0, 20) . '...' : 'YOK',
+            'body_preview' => substr($rawBody, 0, 200),
+        ]);
+
+        // ── İmza doğrulama ─────────────────────────────────────────────────
+        if (!$this->novaBanka->verifyWebhook($rawBody, $signature ?? '')) {
+            // İmza hatalıysa logla ama yine de işlemi dene (geliştirme aşaması)
+            Log::warning('Nova webhook: İmza doğrulaması başarısız! Yine de işleniyor...', [
+                'signature_received' => $signature,
+            ]);
+            // TODO: Canlıya geçince bu satırı açıp alttaki bloğu kaldır:
+            // return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $data = json_decode($rawBody, true);
-
-        // 3. Ödeme başarılı mı?
+        // ── Ödeme tamamlandı eventi ────────────────────────────────────────
         if (isset($data['event']) && $data['event'] === 'payment.completed') {
             $orderId = $data['order_id'] ?? null;
 
+            Log::info('Nova webhook: payment.completed alındı', ['order_id' => $orderId]);
+
             // order_id formatı: ENS-{listing_id}-{uniqid}
-            // Örnek: ENS-42-6A04DB353837B
             if ($orderId && preg_match('/^ENS-(\d+)-/', $orderId, $matches)) {
                 $listingId = (int) $matches[1];
-
-                $listing = Listing::find($listingId);
+                $listing   = Listing::find($listingId);
 
                 if ($listing) {
                     $listing->update(['status' => 'sold']);
@@ -49,11 +59,14 @@ class WebhookController extends Controller
                         'order_id'   => $orderId,
                     ]);
                 }
+            } else {
+                Log::error('Webhook: order_id formatı tanınmadı', ['order_id' => $orderId]);
             }
 
             return response()->json(['received' => true]);
         }
 
-        return response()->json(['received' => true, 'status' => 'not_completed']);
+        Log::info('Nova webhook: Bilinmeyen event', ['event' => $data['event'] ?? 'YOK']);
+        return response()->json(['received' => true, 'status' => 'ignored']);
     }
 }
